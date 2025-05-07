@@ -1,0 +1,35 @@
+<odoo>
+    <record id="view_equipment_list_inherit" model="ir.ui.view">
+        <field name="name">equipment.list.inherit</field>
+        <field name="model">maintenance.equipment</field>
+        <field name="inherit_id" ref="maintenance.hr_equipment_view_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="model"/>
+            </xpath>
+        </field>
+    </record>
+<record id="view_equipment_form_inherit" model="ir.ui.view">
+    <field name="name">equipment.form.inherit</field>
+    <field name="model">maintenance.equipment</field>
+    <field name="inherit_id" ref="maintenance.hr_equipment_view_form"/>
+    <field name="arch" type="xml">
+
+       
+        <xpath expr="//notebook" position="inside">
+            <page string="Consumables">
+                <field name="consumable_line_ids">
+                    <list editable="bottom">
+                        <field name="product_id"/>
+                        <field name="quantity"/>
+                        <field name="uom_id" readonly="1"/>
+                    </list>
+                </field>
+            </page>
+        </xpath>
+
+    </field>
+</record>
+
+
+</odoo>

@@ -1,0 +1,64 @@
+<odoo>
+  <data>
+
+    <!-- The action to open the predictive plan form in popup -->
+   
+
+    <!-- Form view inheritance -->
+    <record id="view_maintenance_request_form_inherit" model="ir.ui.view">
+      <field name="name">maintenance.request.form.inherit.criticity.project</field>
+      <field name="model">maintenance.request</field>
+      <field name="inherit_id" ref="maintenance.hr_equipment_request_view_form"/>
+      <field name="arch" type="xml">
+  <xpath expr="//form/header" position="inside">
+  <button name="open_or_create_plan"
+          type="object"
+          string="Maintenance Plan"
+          class="btn-primary"/>
+</xpath>
+
+        <xpath expr="//field[@name='maintenance_type']" position="replace">
+          <field name="maintenance_type" widget="selection"/>
+        </xpath>
+
+        <xpath expr="//field[@name='priority']" position="after">
+          <field name="criticity"/>
+        </xpath>
+
+        <xpath expr="//field[@name='equipment_id']" position="after">
+          <field name="project_id" domain="[('stage_id.name', '=', 'Done')]"/>
+        </xpath>
+
+     
+      </field>
+    </record>
+
+    <!-- Tree view inheritance -->
+    <record id="view_maintenance_request_tree_inherit_criticity" model="ir.ui.view">
+      <field name="name">maintenance.request.tree.inherit.criticity</field>
+      <field name="model">maintenance.request</field>
+      <field name="inherit_id" ref="maintenance.hr_equipment_request_view_tree"/>
+      <field name="arch" type="xml">
+        <xpath expr="//field[@name='stage_id']" position="after">
+          <field name="criticity"/>
+          <field name="maintenance_type"/>
+        </xpath>
+      </field>
+    </record>
+
+    <!-- Kanban view inheritance -->
+    <record id="view_maintenance_request_kanban_inherit_criticity" model="ir.ui.view">
+      <field name="name">maintenance.request.kanban.inherit.criticity</field>
+      <field name="model">maintenance.request</field>
+      <field name="inherit_id" ref="maintenance.hr_equipment_request_view_kanban"/>
+      <field name="arch" type="xml">
+        <xpath expr="//t[@t-name='card']/field[@name='name']" position="after">
+          <div>
+            <span class="badge badge-info">Criticity: <field name="criticity"/></span>
+          </div>
+        </xpath>
+      </field>
+    </record>
+
+  </data>
+</odoo>

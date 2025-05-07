@@ -1,0 +1,60 @@
+<odoo>
+  <record id="view_maintenance_plan_list" model="ir.ui.view">
+    <field name="name">maintenance.plan.list</field>
+    <field name="model">maintenance.plan</field>
+    <field name="arch" type="xml">
+      <list>
+        <field name="name"/>
+        <field name="maintenance_type"/>
+        <field name="interval_number"/>
+        <field name="interval_type"/>
+        <field name="next_date"/>
+        <field name="equipment_id"/>
+        <field name="project_id"/>
+        <field name="responsible_id"/>
+        <field name="active"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="view_maintenance_plan_form" model="ir.ui.view">
+    <field name="name">maintenance.plan.form</field>
+    <field name="model">maintenance.plan</field>
+    <field name="arch" type="xml">
+      <form string="Maintenance Plan">
+        <sheet>
+          <group>
+            <field name="name"/>
+            <field name="maintenance_type"/>
+            <field name="equipment_id"/>
+            <field name="project_id"/>
+            <field name="responsible_id"/>
+            <field name="interval_number"/>
+            <field name="interval_type"/>
+            <field name="next_date"/>
+            <field name="active"/>
+
+            <field name="mtbf_days"/>
+            <field name="expected_failure_date"/>
+            <field name="prediction_source"/>
+          </group>
+        </sheet>
+       
+      </form>
+    </field>
+  </record>
+
+  <record id="view_maintenance_plan_calendar" model="ir.ui.view">
+    <field name="name">maintenance.plan.calendar</field>
+    <field name="model">maintenance.plan</field>
+    <field name="arch" type="xml">
+      <calendar string="Maintenance Calendar" date_start="next_date">
+        <field name="name"/>
+        <field name="maintenance_type"/>
+        <field name="equipment_id"/>
+      </calendar>
+    </field>
+  </record>
+
+
+</odoo>
