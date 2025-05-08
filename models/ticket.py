@@ -21,6 +21,20 @@ class MaintenanceRequest(models.Model):
         ('predictive', 'Prédictive'),
     ], string="Maintenance Type")
 
+    contract_id = fields.Many2one('maintenance.plan', string="Related Contract", help="The maintenance contract related to this request.")
+
+    request_cost = fields.Float(string="Request Cost", compute="_compute_request_cost", store=True)
+
+    @api.depends('contract_id')
+    def _compute_request_cost(self):
+        for request in self:
+            if request.contract_id and request.contract_id.cost:
+                # Calculate cost per equipment if multiple are associated
+                equipment_count = len(request.contract_id.associated_equipments) or 1
+                request.request_cost = request.contract_id.cost / equipment_count
+            else:
+                request.request_cost = 0.0
+
     def compute_mtbf_from_failures(self):
         for request in self:
             if request.equipment_id:

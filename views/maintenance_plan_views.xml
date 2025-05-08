@@ -39,7 +39,8 @@
             <field name="prediction_source"/>
           </group>
         </sheet>
-       
+           <chatter/>
+
       </form>
     </field>
   </record>
@@ -55,6 +56,35 @@
       </calendar>
     </field>
   </record>
+  <record id="view_maintenance_contract_form" model="ir.ui.view">
+    <field name="name">maintenance.contract.form</field>
+    <field name="model">maintenance.plan</field>
+    <field name="arch" type="xml">
+        <form string="Maintenance Contract">
+            <sheet>
+                <group>
+                    <group string="Contract Details">
+                        <field name="contract_name" placeholder="Contract Name"/>
+                        <field name="contract_start_date" placeholder="Start Date"/>
+                        <field name="contract_end_date" placeholder="End Date"/>
+                        <field name="sla_duration" placeholder="SLA Duration (Days)"/>
+                        <field name="renewal_alert_days" placeholder="Renewal Alert (Days)"/>
+                    </group>
+                    <group string="Associated Information">
+                        <field name="associated_equipments" widget="many2many_tags"/>
+                        <field name="supplier_id" placeholder="Supplier"/>
+                        <field name="client_id" placeholder="Client"/>
+                        <field name="cost" placeholder="Contract Cost"/>
+                    </group>
+                    <group string="SLA Monitoring">
+                        <field name="sla_breached" readonly="1" invisible="1"/>
+                    </group>
+                </group>
+            </sheet>
+               <chatter/>
 
+        </form>
+    </field>
+  </record>
 
 </odoo>

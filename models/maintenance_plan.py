@@ -32,7 +32,35 @@ class MaintenancePlan(models.Model):
     expected_failure_date = fields.Date(string="Expected Failure Date")
     mtbf_days = fields.Integer(string="MTBF (Days)", help="Mean Time Between Failures")
     prediction_source = fields.Char(string="Prediction Source", help="Algorithm, Sensor, or Manual")
+    
+    contract_name = fields.Char(string="Contract Name")
+    sla_duration = fields.Integer(string="SLA Duration (Days)", help="SLA Duration for resolving maintenance requests.")
+    contract_start_date = fields.Date(string="Contract Start Date")
+    contract_end_date = fields.Date(string="Contract End Date")
+    renewal_alert_days = fields.Integer(string="Renewal Alert Days", default=30)
+    associated_equipments = fields.Many2many('maintenance.equipment', string="Associated Equipments")
+    supplier_id = fields.Many2one('res.partner', string="Supplier", domain="[('supplier_rank', '>', 0)]")
+    client_id = fields.Many2one('res.partner', string="Client", domain="[('customer_rank', '>', 0)]")
+    cost = fields.Float(string="Contract Cost")
+    sla_breached = fields.Boolean(string="SLA Breached", compute="_compute_sla_breached", store=True)
 
+    @api.depends('sla_duration', 'next_date')
+    def _compute_sla_breached(self):
+        """Automatically check if SLA is breached."""
+        for plan in self:
+            if plan.sla_duration and plan.next_date:
+                sla_deadline = plan.next_date + timedelta(days=plan.sla_duration)
+                plan.sla_breached = date.today() > sla_deadline
+            else:
+                plan.sla_breached = False
+    
+    @api.model
+    def check_contract_renewal(self):
+        plans = self.search([('contract_end_date', '!=', False)])
+        for plan in plans:
+            if plan.contract_end_date - date.today() <= timedelta(days=plan.renewal_alert_days):
+                plan.message_post(body=f"⚠️ Contract '{plan.contract_name}' is nearing its end date ({plan.contract_end_date}). Please consider renewing.")
+                
     @api.depends('equipment_id.latest_failure_date', 'mtbf_days')
     def _compute_next_date(self):
         """Auto-compute next date depending on type."""
@@ -70,3 +98,27 @@ class MaintenancePlan(models.Model):
             if plan.maintenance_type == 'predictive' and plan.mtbf_days:
                 failure_date = plan.equipment_id.latest_failure_date or date.today()
                 plan.next_date = failure_date + timedelta(days=plan.mtbf_days)
+    def create_plan_from_request(self):
+        for request in self:
+            # Create or open Maintenance Plan with pre-filled values
+            plan = self.env['maintenance.plan'].create({
+                'name': f"Plan for {request.name}",
+                'equipment_id': request.equipment_id.id,
+                'maintenance_type': request.maintenance_type,
+                'project_id': request.project_id.id if request.project_id else False,
+                'responsible_id': request.user_id.id if request.user_id else False,
+                'interval_number': 30,  # Default value, you can customize it
+                'interval_type': 'days',
+                'next_date': date.today() + timedelta(days=30),
+                'active': True,
+            })
+
+            # Redirect directly to the newly created plan
+            return {
+                'name': "Maintenance Plan",
+                'type': 'ir.actions.act_window',
+                'res_model': 'maintenance.plan',
+                'view_mode': 'form',
+                'res_id': plan.id,
+                'target': 'current',
+            }

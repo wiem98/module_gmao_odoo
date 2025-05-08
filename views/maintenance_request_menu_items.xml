@@ -29,9 +29,9 @@
             sequence="10"/>
 
   <record id="action_gmao_equipment_list" model="ir.actions.act_window">
-      <field name="name">Equipment</field>
-      <field name="res_model">maintenance.equipment</field>
-      <field name="view_mode">list,form</field>
+    <field name="name">Equipment</field>
+    <field name="res_model">maintenance.equipment</field>
+    <field name="view_mode">list,form</field>
   </record>
 
   <menuitem id="menu_gmao_equipment"
@@ -40,24 +40,38 @@
             action="action_gmao_equipment_list"
             sequence="20"/>
 
+  <!-- Main Menu for Maintenance (Plans and Contracts) -->
+  <menuitem id="menu_maintenance_plan_root"
+            name="Maintenance"
+            parent="menu_gmao_root"
+            sequence="30"/>
+
+  <!-- Maintenance Plans -->
   <record id="action_maintenance_plan" model="ir.actions.act_window">
     <field name="name">Maintenance Plans</field>
     <field name="res_model">maintenance.plan</field>
-    <field name="view_mode">list,form,calendar</field>
+    <field name="view_mode">list,form,calendar,kanban</field>
   </record>
 
-  <record id="action_gmao_bt" model="ir.actions.act_window">
-        <field name="name">Bon de Travail</field>
-        <field name="res_model">gmao.bt</field>
-        <field name="view_mode">kanban,list,form</field>
-    </record>
-
-  <menuitem id="menu_bt_root" name="Bon de Travail (BT)" parent="menu_gmao_root" action="action_gmao_bt" sequence="40"/>
-
-  <menuitem id="menu_maintenance_plan_root"
+  <menuitem id="menu_maintenance_plan"
             name="Maintenance Plans"
-            parent="menu_gmao_root"
+            parent="menu_maintenance_plan_root"
             action="action_maintenance_plan"
-            sequence="30"/>
-</odoo>
+            sequence="10"/>
 
+  <!-- Maintenance Contracts -->
+  <record id="action_maintenance_contract_form" model="ir.actions.act_window">
+    <field name="name">Maintenance Contracts</field>
+    <field name="res_model">maintenance.plan</field>
+    <field name="view_mode">list,form</field>
+    <field name="domain">[('contract_name', '!=', False)]</field>
+    <field name="context">{}</field>
+  </record>
+
+  <menuitem id="menu_maintenance_contract"
+            name="Maintenance Contracts"
+            parent="menu_maintenance_plan_root"
+            action="action_maintenance_contract_form"
+            sequence="20"/>
+
+</odoo>
