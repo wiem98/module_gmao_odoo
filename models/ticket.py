@@ -159,10 +159,9 @@ class MaintenanceEquipment(models.Model):
     ], string="Status", default='in_use')
     
     consumable_line_ids = fields.One2many('equipment.consumable.line','equipment_id',string='Consumables')
-    
-
     parent_id = fields.Many2one('maintenance.equipment', string="Parent Equipment")
     child_ids = fields.One2many('maintenance.equipment', 'parent_id', string="Sub-components")
+    bt_ids = fields.One2many('gmao.bt', 'equipment_id', string="Historique des BT")
 
     installation_date = fields.Date(string="Installation Date")
     scrap_date = fields.Date(string="Scrap Date")
@@ -224,6 +223,21 @@ class MaintenanceEquipment(models.Model):
                 plan.write(values)
             else:
                 MaintenancePlan.create(values)
+
+
+    def action_open_bt_history(self):
+        self.ensure_one()
+        return {
+            'name': f'Historique des BT - {self.name}',
+            'type': 'ir.actions.act_window',
+            'res_model': 'gmao.bt',
+            'view_mode': 'tree,form',
+            'domain': [('equipment_id', '=', self.id)],
+            'context': {
+                'default_equipment_id': self.id
+            },
+            'target': 'current',
+        }
 
 class ProjectTask(models.Model):
     _inherit = 'project.task'

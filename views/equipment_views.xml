@@ -15,7 +15,6 @@
     <field name="inherit_id" ref="maintenance.hr_equipment_view_form"/>
     <field name="arch" type="xml">
 
-       
         <xpath expr="//notebook" position="inside">
             <page string="Consumables">
                 <field name="consumable_line_ids">
@@ -23,6 +22,21 @@
                         <field name="product_id"/>
                         <field name="quantity"/>
                         <field name="uom_id" readonly="1"/>
+                    </list>
+                </field>
+            </page>
+        </xpath>
+
+        <!-- Ajoute l’onglet "Historique Bon de Travail" -->
+        <xpath expr="//notebook" position="inside">
+            <page string="Historique Bon de Travail">
+                <field name="bt_ids">
+                    <list>
+                        <field name="name"/>
+                        <field name="intervention_type"/>
+                        <field name="stage_id"/>
+                        <field name="schedule_date"/>
+                        <field name="technician_id"/>
                     </list>
                 </field>
             </page>
