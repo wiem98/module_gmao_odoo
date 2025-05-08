@@ -95,6 +95,20 @@ class MaintenanceRequest(models.Model):
                 except Exception as e:
                     request.message_post(body=f"⚠️ Project integration failed: {str(e)}")
 
+            # Créer automatiquement un bon de travail
+            bt_model = self.env['gmao.bt']
+            bt_vals = {
+                'name': f"New BT for {request.name}",
+                'equipment_id': request.equipment_id.id,
+                'intervention_type': request.maintenance_type,
+                'technician_id': request.owner_user_id.id,
+                'supervisor_id': request.user_id.id,
+                'intervention_type': request.maintenance_type,
+                'description': request.description or f"BT généré automatiquement depuis la demande {request.name}",
+                'schedule_date': fields.Date.today(),
+                'priority': {'low': '0', 'medium': '1', 'high': '2'}.get(request.criticity, '1'),
+            }
+            bt_model.create(bt_vals)
         return requests
     def _create_or_update_plan(self):
         self.ensure_one()
