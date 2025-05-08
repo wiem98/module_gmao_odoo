@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo noupdate="1">
+    <record id="bt_stage_submitted" model="bt.stages" forcecreate="False">
+        <field name="name">Soumis</field>
+        <field name="sequence">1</field>
+    </record>
+
+    <record id="bt_stage_assigned" model="bt.stages" forcecreate="False">
+        <field name="name">Affecté</field>
+        <field name="sequence">2</field>
+    </record>
+
+    <record id="bt_stage_done" model="bt.stages" forcecreate="False">
+        <field name="name">Réalisé</field>
+        <field name="sequence">3</field>
+        <field name="done">True</field>
+    </record>
+
+    <record id="bt_stage_closed" model="bt.stages" forcecreate="False">
+        <field name="name">Clôturé</field>
+        <field name="sequence">4</field>
+        <field name="done">True</field>
+    </record>
+</odoo>

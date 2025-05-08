@@ -1,0 +1,63 @@
+<odoo>
+    <template id="report_gmao_bt_document">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="bt">
+                <t t-call="web.external_layout">
+                    <div class="page">
+
+                        <h2>Bon de Travail : <t t-esc="bt.name"/></h2>
+
+                        <div class="row mt16">
+                            <div class="col-6">
+                                <p><strong>Équipement :</strong> <t t-esc="bt.equipment_id.display_name"/></p>
+                                <p><strong>Type d'intervention :</strong>
+                                    <t t-esc="dict(bt._fields['intervention_type'].selection).get(bt.intervention_type)"/>
+                                </p>
+                                <p><strong>Technicien :</strong> <t t-esc="bt.technician_id.name"/></p>
+                                <p><strong>Superviseur :</strong> <t t-esc="bt.supervisor_id.name"/></p>
+                            </div>
+                            <div class="col-6">
+                                <p><strong>Étape :</strong> <t t-esc="bt.stage_id.name"/></p>
+                                <p><strong>Priorité :</strong>
+                                    <t t-esc="dict(bt._fields['priority'].selection).get(bt.priority)"/>
+                                </p>
+                                <p><strong>Référence :</strong> <t t-esc="bt.name"/></p>
+                                <p><strong>Date Planifiée :</strong> <t t-esc="bt.schedule_date"/></p>
+                            </div>
+                        </div>
+
+                        <hr/>
+
+                        <h4>Description</h4>
+                        <p t-esc="bt.description"/>
+
+                        <h4 class="mt32">Pièces utilisées</h4>
+                        <ul>
+                            <t t-foreach="bt.used_parts_ids" t-as="part">
+                                <li><t t-esc="part.display_name"/></li>
+                            </t>
+                        </ul>
+
+                        <div class="row mt32">
+                            <div class="col-6">
+                                <strong>Signature Technicien :</strong><br/>
+                                <t t-if="bt.technician_signature">
+                                    <img t-att-src="'data:image/png;base64,%s' % bt.technician_signature.decode()"
+                                         style="max-height:100px; margin-top: 10px;"/>
+                                </t>
+                            </div>
+                            <div class="col-6">
+                                <strong>Signature Superviseur :</strong><br/>
+                                <t t-if="bt.supervisor_signature">
+                                    <img t-att-src="'data:image/png;base64,%s' % bt.supervisor_signature.decode()"
+                                         style="max-height:100px; margin-top: 10px;"/>
+                                </t>
+                            </div>
+                        </div>
+
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

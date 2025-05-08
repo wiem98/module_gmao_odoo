@@ -1,3 +1,5 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_maintenance_plan_user,access.maintenance.plan.user,model_maintenance_plan,base.group_user,1,1,1,1
 access_equipment_consumable_line_user,equipment.consumable.line.user,model_equipment_consumable_line,base.group_user,1,1,1,1
+access_gmao_bt_user,access_gmao_bt_user,model_gmao_bt,,1,1,1,1
+access_bt_stages_user,access_bt_stages_user,model_bt_stages,,1,1,1,1

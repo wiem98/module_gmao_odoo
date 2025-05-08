@@ -28,17 +28,17 @@
             action="action_gmao_maintenance_request"
             sequence="10"/>
 
-<record id="action_gmao_equipment_list" model="ir.actions.act_window">
-    <field name="name">Equipment</field>
-    <field name="res_model">maintenance.equipment</field>
-    <field name="view_mode">list,form</field>
-</record>
+  <record id="action_gmao_equipment_list" model="ir.actions.act_window">
+      <field name="name">Equipment</field>
+      <field name="res_model">maintenance.equipment</field>
+      <field name="view_mode">list,form</field>
+  </record>
 
-<menuitem id="menu_gmao_equipment"
-          name="Equipment"
-          parent="menu_gmao_root"
-          action="action_gmao_equipment_list"
-          sequence="20"/>
+  <menuitem id="menu_gmao_equipment"
+            name="Equipment"
+            parent="menu_gmao_root"
+            action="action_gmao_equipment_list"
+            sequence="20"/>
 
   <record id="action_maintenance_plan" model="ir.actions.act_window">
     <field name="name">Maintenance Plans</field>
@@ -46,10 +46,18 @@
     <field name="view_mode">list,form,calendar</field>
   </record>
 
-<menuitem id="menu_maintenance_plan_root"
-          name="Maintenance Plans"
-          parent="menu_gmao_root"
-          action="action_maintenance_plan"
-          sequence="30"/>
+  <record id="action_gmao_bt" model="ir.actions.act_window">
+        <field name="name">Bon de Travail</field>
+        <field name="res_model">gmao.bt</field>
+        <field name="view_mode">kanban,list,form</field>
+    </record>
+
+  <menuitem id="menu_bt_root" name="Bon de Travail (BT)" parent="menu_gmao_root" action="action_gmao_bt" sequence="40"/>
+
+  <menuitem id="menu_maintenance_plan_root"
+            name="Maintenance Plans"
+            parent="menu_gmao_root"
+            action="action_maintenance_plan"
+            sequence="30"/>
 </odoo>
 

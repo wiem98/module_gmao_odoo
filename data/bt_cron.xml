@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="cron_bt_check_late" model="ir.cron">
+        <field name="name">Vérification des BT en retard</field>
+        <field name="model_id" ref="model_gmao_bt"/>
+        <field name="state">code</field>
+        <field name="code">model.check_late_bt()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">hours</field>
+        <field name="active">True</field>
+    </record>
+</odoo>
