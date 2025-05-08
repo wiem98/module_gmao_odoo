@@ -101,7 +101,7 @@ class MaintenanceRequest(models.Model):
                 'name': f"New BT for {request.name}",
                 'equipment_id': request.equipment_id.id,
                 'intervention_type': request.maintenance_type,
-                'technician_id': request.owner_user_id.id,
+                'technician_id': request.equipment_id.technician_user_id.id if request.equipment_id.technician_user_id else False,
                 'supervisor_id': request.user_id.id,
                 'intervention_type': request.maintenance_type,
                 'description': request.description or f"BT généré automatiquement depuis la demande {request.name}",
