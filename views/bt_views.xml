@@ -100,4 +100,21 @@
         <field name="print_report_name">'BT - %s' % (object.name)</field>
     </record>
 
+    <record id="view_gmao_bt_search" model="ir.ui.view">
+        <field name="name">gmao.bt.search</field>
+        <field name="model">gmao.bt</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="stage_id"/>
+                <field name="schedule_date"/>
+                <filter name="submitted" string="Soumis" domain="[('stage_id.name','=','Soumis')]"/>
+                <filter name="assigned" string="Affecté" domain="[('stage_id.name','=','Affecté')]"/>
+                <filter name="realised" string="Réalisé" domain="[('stage_id.name','=','Réalisé')]"/>
+                <filter name="closed" string="Clôturé" domain="[('stage_id.name','=','Clôturé')]"/>
+                <filter name="planned" string="Planifiés" domain="[('schedule_date','>',context_today())]"/>
+            </search>
+        </field>
+    </record>
+
+
 </odoo>

@@ -11,10 +11,12 @@ class GmaoBonTravail(models.Model):
     description = fields.Text(string="Description")
     equipment_id = fields.Many2one('maintenance.equipment', string="Équipement concerné")
     intervention_type = fields.Selection([
-        ('corrective', 'Corrective'),
         ('preventive', 'Préventive'),
-        ('inspection', 'Inspection'),
-        ('other', 'Autre'),
+        ('corrective', 'Corrective'),
+        ('curative', 'Curative'),
+        ('systematic', 'Systématique'),
+        ('conditional', 'Conditionnelle'),
+        ('predictive', 'Prédictive'),
     ], string="Type d'intervention")
     used_parts_ids = fields.Many2many('product.product', string="Pièces utilisées")
     technician_id = fields.Many2one('res.users', string="Technicien")
