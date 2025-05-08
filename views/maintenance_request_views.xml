@@ -18,14 +18,8 @@
       <field name="model">maintenance.request</field>
       <field name="inherit_id" ref="maintenance.hr_equipment_request_view_form"/>
       <field name="arch" type="xml">
-  <xpath expr="//form/header" position="inside">
-    <xpath expr="//form/header" position="inside">
-        <button name="open_plan_from_request" 
-                type="object" 
-                string="Maintenance Plan" 
-                class="btn-primary"/>
-      </xpath>
-</xpath>
+  
+
 
         <xpath expr="//field[@name='maintenance_type']" position="replace">
           <field name="maintenance_type" widget="selection"/>

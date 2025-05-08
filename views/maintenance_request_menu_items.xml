@@ -74,4 +74,12 @@
             action="action_maintenance_contract_form"
             sequence="20"/>
 
+  <record id="action_gmao_bt" model="ir.actions.act_window">
+    <field name="name">Bon de Travail</field>
+    <field name="res_model">gmao.bt</field>
+    <field name="view_mode">kanban,list,form</field>
+  </record>
+
+  <menuitem id="menu_bt_root" name="Bon de Travail (BT)" parent="menu_gmao_root" action="action_gmao_bt" sequence="40"/>
+  <menuitem id="menu_maintenance_plan_root" name="Maintenance Plans" parent="menu_gmao_root" action="action_maintenance_plan" sequence="30"/>
 </odoo>
