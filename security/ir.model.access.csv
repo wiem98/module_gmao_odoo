@@ -3,3 +3,4 @@ access_maintenance_plan_user,access.maintenance.plan.user,model_maintenance_plan
 access_equipment_consumable_line_user,equipment.consumable.line.user,model_equipment_consumable_line,base.group_user,1,1,1,1
 access_gmao_bt_user,access_gmao_bt_user,model_gmao_bt,,1,1,1,1
 access_bt_stages_user,access_bt_stages_user,model_bt_stages,,1,1,1,1
+access_maintenance_service_contract_user,access_maintenance_service_contract_user,model_maintenance_service_contract,,1,1,1,1
