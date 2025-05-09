@@ -1,0 +1,60 @@
+<odoo>
+  <record id="view_maintenance_service_contract_list" model="ir.ui.view">
+    <field name="name">maintenance.service.contract.list</field>
+    <field name="model">maintenance.service.contract</field>
+    <field name="arch" type="xml">
+      <list string="Maintenance Service Contracts">
+        <field name="name"/>
+        <field name="contract_start_date"/>
+        <field name="contract_end_date"/>
+        <field name="sla_duration"/>
+        <field name="renewal_alert_days"/>
+        <field name="cost"/>
+        <field name="client_id"/>
+        <field name="supplier_id"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="view_maintenance_service_contract_form" model="ir.ui.view">
+    <field name="name">maintenance.service.contract.form</field>
+    <field name="model">maintenance.service.contract</field>
+    <field name="arch" type="xml">
+      <form string="Maintenance Service Contract">
+        <sheet>
+          <group>
+            <group string="Contract Details">
+              <field name="name"/>
+              <field name="contract_start_date"/>
+              <field name="contract_end_date"/>
+              <field name="sla_duration"/>
+              <field name="renewal_alert_days"/>
+              <field name="cost"/>
+            </group>
+            <group string="Associated Information">
+              <field name="associated_equipments" widget="many2many_tags"/>
+              <field name="supplier_id"/>
+              <field name="client_id"/>
+            </group>
+          </group>
+          <group string="SLA Monitoring">
+            <field name="sla_breached" readonly="1"/>
+          </group>
+        </sheet>
+        <chatter/>
+      </form>
+    </field>
+  </record>
+
+  <record id="view_maintenance_service_contract_calendar" model="ir.ui.view">
+    <field name="name">maintenance.service.contract.calendar</field>
+    <field name="model">maintenance.service.contract</field>
+    <field name="arch" type="xml">
+      <calendar string="Contract Expiry Calendar" date_start="contract_end_date">
+        <field name="name"/>
+        <field name="client_id"/>
+        <field name="supplier_id"/>
+      </calendar>
+    </field>
+  </record>
+</odoo>

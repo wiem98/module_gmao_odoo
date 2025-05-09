@@ -15,7 +15,9 @@
         'views/maintenance_request_views.xml',
         'views/maintenance_request_menu_items.xml',
         'views/equipment_views.xml',
-        'views/maintenance_plan_views.xml'
+        'views/maintenance_plan_views.xml',
+        'views/maintenance_service_contract.xml',
+
     ],
     'installable': True,
     'application': True,

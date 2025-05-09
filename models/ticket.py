@@ -1,5 +1,7 @@
 from odoo import models, fields, api
 from datetime import timedelta, date
+from odoo.exceptions import UserError
+
 
 class MaintenanceRequest(models.Model):
     _inherit = 'maintenance.request'
@@ -153,6 +155,12 @@ class MaintenanceRequest(models.Model):
 
     def open_or_create_plan(self):
         self.ensure_one()
+        
+        # Validate that equipment_id is set
+        if not self.equipment_id:
+            raise UserError("Please set the Equipment field before creating a Maintenance Plan.")
+        
+        # Proceed with plan creation or opening
         self._create_or_update_plan()
 
         plan = self.env['maintenance.plan'].search([
@@ -169,6 +177,7 @@ class MaintenanceRequest(models.Model):
                 'res_id': plan.id,
                 'target': 'new',
             }
+
 
 class MaintenanceEquipment(models.Model):
     _inherit = 'maintenance.equipment'

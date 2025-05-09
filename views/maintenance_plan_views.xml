@@ -3,7 +3,7 @@
     <field name="name">maintenance.plan.list</field>
     <field name="model">maintenance.plan</field>
     <field name="arch" type="xml">
-      <list>
+      <list string="Maintenance Plans">
         <field name="name"/>
         <field name="maintenance_type"/>
         <field name="interval_number"/>
@@ -17,33 +17,50 @@
     </field>
   </record>
 
+ 
   <record id="view_maintenance_plan_form" model="ir.ui.view">
     <field name="name">maintenance.plan.form</field>
     <field name="model">maintenance.plan</field>
     <field name="arch" type="xml">
       <form string="Maintenance Plan">
         <sheet>
-          <group>
-            <field name="name"/>
-            <field name="maintenance_type"/>
-            <field name="equipment_id"/>
-            <field name="project_id"/>
-            <field name="responsible_id"/>
-            <field name="interval_number"/>
-            <field name="interval_type"/>
-            <field name="next_date"/>
-            <field name="active"/>
+          <notebook>
+            <page string="General Information">
+              <group>
+                <group>
+                  <field name="name"/>
+                  <field name="maintenance_type"/>
+                  <field name="equipment_id"/>
+                </group>
+                <group>
+                  <field name="project_id"/>
+                  <field name="responsible_id"/>
+                  <field name="active"/>
+                </group>
+              </group>
+              <group>
+                <field name="interval_number"/>
+                <field name="interval_type"/>
+                <field name="next_date"/>
+              </group>
+            </page>
 
-            <field name="mtbf_days"/>
-            <field name="expected_failure_date"/>
-            <field name="prediction_source"/>
-          </group>
+            <page string="Predictive Maintenance">
+              <group>
+                <field name="mtbf_days"/>
+                <field name="expected_failure_date"/>
+                <field name="prediction_source"/>
+              </group>
+            </page>
+          </notebook>
         </sheet>
-           <chatter/>
-
+        <chatter/>
       </form>
     </field>
   </record>
+
+
+
 
   <record id="view_maintenance_plan_calendar" model="ir.ui.view">
     <field name="name">maintenance.plan.calendar</field>
@@ -56,34 +73,65 @@
       </calendar>
     </field>
   </record>
-  <record id="view_maintenance_contract_form" model="ir.ui.view">
-    <field name="name">maintenance.contract.form</field>
+
+
+
+ <record id="view_maintenance_plan_kanban" model="ir.ui.view">
+    <field name="name">maintenance.plan.kanban</field>
     <field name="model">maintenance.plan</field>
     <field name="arch" type="xml">
-        <form string="Maintenance Contract">
-            <sheet>
-                <group>
-                    <group string="Contract Details">
-                        <field name="contract_name" placeholder="Contract Name"/>
-                        <field name="contract_start_date" placeholder="Start Date"/>
-                        <field name="contract_end_date" placeholder="End Date"/>
-                        <field name="sla_duration" placeholder="SLA Duration (Days)"/>
-                        <field name="renewal_alert_days" placeholder="Renewal Alert (Days)"/>
-                    </group>
-                    <group string="Associated Information">
-                        <field name="associated_equipments" widget="many2many_tags"/>
-                        <field name="supplier_id" placeholder="Supplier"/>
-                        <field name="client_id" placeholder="Client"/>
-                        <field name="cost" placeholder="Contract Cost"/>
-                    </group>
-                    <group string="SLA Monitoring">
-                        <field name="sla_breached" readonly="1" invisible="1"/>
-                    </group>
-                </group>
-            </sheet>
-               <chatter/>
+      <kanban default_group_by="date_category" class="o_kanban_small_column" on_create="quick_create">
+        <field name="color"/>
+        <field name="name"/>
+        <field name="maintenance_type"/>
+        <field name="next_date"/>
+        <field name="equipment_id"/>
+        <field name="responsible_id"/>
+        <field name="active"/>
+        <field name="state"/>
+        <field name="mtbf_days"/>
+        <field name="expected_failure_date"/>
+        <field name="date_category"/>
 
-        </form>
+        <progressbar field="active" colors='{"True": "success", "False": "danger"}'/>
+
+        <templates>
+          <t t-name="menu">
+            <a t-if="widget.editable" role="menuitem" type="delete" class="dropdown-item">Delete</a>
+            <field name="color" widget="kanban_color_picker"/>
+          </t>
+
+          <t t-name="card">
+            <div class="o_kanban_card">
+              <div class="o_kanban_details">
+                <div class="d-flex justify-content-between align-items-center">
+                  <strong><field name="name" class="fw-bold fs-5"/></strong>
+                  <span class="badge"><field name="maintenance_type"/></span>
+                </div>
+                <div class="text-muted">
+                  <span><field name="equipment_id"/></span> |
+                  <span><field name="next_date"/></span>
+                </div>
+                <div class="mt-2">
+                  <t t-if="maintenance_type == 'predictive'">
+                    <strong>MTBF:</strong> <span><field name="mtbf_days"/> days</span> <br/>
+                    <strong>Expected Failure:</strong> <span><field name="expected_failure_date"/></span>
+                  </t>
+                </div>
+              </div>
+              
+              <div class="o_kanban_footer d-flex justify-content-between align-items-center mt-3">
+                <div class="d-flex align-items-center">
+                  <field name="responsible_id" widget="many2one_avatar_user"/>
+                </div>
+                <t t-if="state">
+                  <span class="badge badge-info"><field name="state"/></span>
+                </t>
+              </div>
+            </div>
+          </t>
+        </templates>
+      </kanban>
     </field>
   </record>
 
