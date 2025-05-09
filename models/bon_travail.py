@@ -31,6 +31,16 @@ class GmaoBonTravail(models.Model):
         bt_stages.AVAILABLE_PRIORITIES, string='Priority', index=True,
         default=bt_stages.AVAILABLE_PRIORITIES[0][0])
     schedule_date = fields.Date(string="Date Planifiée")
+    contract_id = fields.Many2one('maintenance.service.contract', string="Contrat de Maintenance")
+    contract_start_date = fields.Date(related='contract_id.contract_start_date', store=True, readonly=True)
+    contract_end_date = fields.Date(related='contract_id.contract_end_date', store=True, readonly=True)
+    sla_duration = fields.Integer(related='contract_id.sla_duration', store=True, readonly=True)
+    contract_cost = fields.Float(related='contract_id.cost', store=True, readonly=True)
+    contract_client_id = fields.Many2one(related='contract_id.client_id', store=True, readonly=True)
+    contract_supplier_id = fields.Many2one(related='contract_id.supplier_id', store=True, readonly=True)
+
+
+
 
     @api.model
     def _read_group_stage_ids(self, stages, domain, order=None):

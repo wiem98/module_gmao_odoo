@@ -27,6 +27,18 @@ class MaintenanceRequest(models.Model):
 
     request_cost = fields.Float(string="Request Cost", compute="_compute_request_cost", store=True)
 
+    def _get_active_contract(self):
+        self.ensure_one()
+        Contract = self.env['maintenance.service.contract']
+        today = fields.Date.context_today(self)
+
+        return Contract.search([
+            ('associated_equipments', 'in', self.equipment_id.id),
+            ('contract_start_date', '<=', today),
+            ('contract_end_date', '>=', today)
+        ], limit=1)
+
+
     @api.depends('contract_id')
     def _compute_request_cost(self):
         for request in self:
@@ -99,6 +111,7 @@ class MaintenanceRequest(models.Model):
 
             # Créer automatiquement un bon de travail
             bt_model = self.env['gmao.bt']
+            contract = request._get_active_contract()
             bt_vals = {
                 'name': f"New BT for {request.name}",
                 'equipment_id': request.equipment_id.id,
@@ -110,6 +123,7 @@ class MaintenanceRequest(models.Model):
                 'schedule_date': fields.Date.today(),
                 'priority': {'low': '0', 'medium': '1', 'high': '2'}.get(request.criticity, '1'),
                 'used_parts_ids': [(6, 0, request.equipment_id.consumable_line_ids.mapped('product_id').ids)],
+                'contract_id': contract.id if contract else False,
 
             }
 

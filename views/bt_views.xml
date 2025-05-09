@@ -70,6 +70,7 @@
                         </group>
 
                         <group>
+                            <field name="description" placeholder="Détail du problème ou intervention..."/>
                             <field name="used_parts_ids" widget="many2many_tags"/>
                             <field name="schedule_date"/>
                             <field name="technician_signature" widget="signature"/>
@@ -78,9 +79,23 @@
                     </group>
 
                     <notebook>
+                    
                         <page string="Description">
                             <field name="description" placeholder="Détail du problème ou intervention..."/>
                         </page>
+
+                        <page string="Contrat de Maintenance">
+                            <group>
+                                <field name="contract_id" readonly="1"/>
+                                <field name="contract_start_date"/>
+                                <field name="contract_end_date"/>
+                                <field name="sla_duration"/>
+                                <field name="contract_cost"/>
+                                <field name="contract_client_id"/>
+                                <field name="contract_supplier_id"/>
+                            </group>
+                        </page>
+
                     </notebook>
                 </sheet>
                 <chatter/>
