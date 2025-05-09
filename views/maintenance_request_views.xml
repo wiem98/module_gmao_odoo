@@ -6,9 +6,7 @@
     <field name="name">Open Maintenance Plan</field>
     <field name="res_model">maintenance.plan</field>
     <field name="view_mode">form</field>
-    <field name="view_id" ref="view_maintenance_plan_form"/>
     <field name="target">new</field>
-    <field name="context">{'default_equipment_id': equipment_id, 'default_project_id': project_id, 'default_maintenance_type': maintenance_type}</field>
   </record>
 
 

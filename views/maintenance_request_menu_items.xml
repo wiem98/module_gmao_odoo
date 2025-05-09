@@ -81,5 +81,4 @@
   </record>
 
   <menuitem id="menu_bt_root" name="Bon de Travail (BT)" parent="menu_gmao_root" action="action_gmao_bt" sequence="40"/>
-  <menuitem id="menu_maintenance_plan_root" name="Maintenance Plans" parent="menu_gmao_root" action="action_maintenance_plan" sequence="30"/>
 </odoo>

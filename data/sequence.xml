@@ -1,8 +1,0 @@
-<odoo>
-    <record id="seq_gmao_bt" model="ir.sequence">
-        <field name="name">BT Sequence</field>
-        <field name="code">gmao.bt</field>
-        <field name="prefix">BT/</field>
-        <field name="padding">4</field>
-    </record>
-</odoo>

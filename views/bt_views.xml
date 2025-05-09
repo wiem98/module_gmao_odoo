@@ -81,9 +81,6 @@
                         <page string="Description">
                             <field name="description" placeholder="Détail du problème ou intervention..."/>
                         </page>
-                        <page string="Suivi / Activités">
-                            <field name="activity_ids" widget="mail_activity"/>
-                        </page>
                     </notebook>
                 </sheet>
                 <chatter/>

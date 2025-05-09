@@ -107,8 +107,20 @@ class MaintenanceRequest(models.Model):
                 'description': request.description or f"BT généré automatiquement depuis la demande {request.name}",
                 'schedule_date': fields.Date.today(),
                 'priority': {'low': '0', 'medium': '1', 'high': '2'}.get(request.criticity, '1'),
+                'used_parts_ids': [(6, 0, request.equipment_id.consumable_line_ids.mapped('product_id').ids)],
+
             }
-            bt_model.create(bt_vals)
+
+            bt_record = bt_model.create(bt_vals)
+            # Add Activity to the BT record
+            if bt_record.technician_id and bt_record.schedule_date:
+                bt_record.activity_schedule(
+                    'mail.activity_data_todo',
+                    summary=bt_record.description,
+                    user_id=bt_record.technician_id.id,
+                    date_deadline=bt_record.schedule_date
+                )
+
         return requests
     def _create_or_update_plan(self):
         self.ensure_one()
@@ -176,6 +188,7 @@ class MaintenanceEquipment(models.Model):
     parent_id = fields.Many2one('maintenance.equipment', string="Parent Equipment")
     child_ids = fields.One2many('maintenance.equipment', 'parent_id', string="Sub-components")
     bt_ids = fields.One2many('gmao.bt', 'equipment_id', string="Historique des BT")
+    technician_user_id = fields.Many2one('res.users', string='Responsible', required=True, tracking=True, default=lambda self: self.env.uid)
 
     installation_date = fields.Date(string="Installation Date")
     scrap_date = fields.Date(string="Scrap Date")
