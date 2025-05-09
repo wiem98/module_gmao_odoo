@@ -46,33 +46,33 @@
             parent="menu_gmao_root"
             sequence="30"/>
 
-  <!-- Maintenance Plans -->
-  <record id="action_maintenance_plan" model="ir.actions.act_window">
+<!-- Maintenance Plans -->
+<record id="action_maintenance_plan" model="ir.actions.act_window">
     <field name="name">Maintenance Plans</field>
     <field name="res_model">maintenance.plan</field>
     <field name="view_mode">list,form,calendar,kanban</field>
-  </record>
+    <field name="view_id" ref="view_maintenance_plan_list"/>
+</record>
 
-  <menuitem id="menu_maintenance_plan"
-            name="Maintenance Plans"
-            parent="menu_maintenance_plan_root"
-            action="action_maintenance_plan"
-            sequence="10"/>
+<menuitem id="menu_maintenance_plan"
+          name="Maintenance Plans"
+          parent="menu_maintenance_plan_root"
+          action="action_maintenance_plan"
+          sequence="10"/>
 
-  <!-- Maintenance Contracts -->
-  <record id="action_maintenance_contract_form" model="ir.actions.act_window">
-    <field name="name">Maintenance Contracts</field>
-    <field name="res_model">maintenance.plan</field>
-    <field name="view_mode">list,form</field>
-    <field name="domain">[('contract_name', '!=', False)]</field>
-    <field name="context">{}</field>
-  </record>
+<!-- Maintenance Service Contracts -->
+<record id="action_maintenance_service_contract" model="ir.actions.act_window">
+    <field name="name">Maintenance Service Contracts</field>
+    <field name="res_model">maintenance.service.contract</field>
+    <field name="view_mode">list,form,calendar</field>
+</record>
 
-  <menuitem id="menu_maintenance_contract"
-            name="Maintenance Contracts"
-            parent="menu_maintenance_plan_root"
-            action="action_maintenance_contract_form"
-            sequence="20"/>
+<menuitem id="menu_maintenance_service_contract"
+          name="Maintenance Service Contracts"
+          parent="menu_maintenance_plan_root"
+          action="action_maintenance_service_contract"
+          sequence="20"/>
+
 
   <record id="action_gmao_bt" model="ir.actions.act_window">
     <field name="name">Bon de Travail</field>
@@ -81,5 +81,4 @@
   </record>
 
   <menuitem id="menu_bt_root" name="Bon de Travail (BT)" parent="menu_gmao_root" action="action_gmao_bt" sequence="40"/>
-  <menuitem id="menu_maintenance_plan_root" name="Maintenance Plans" parent="menu_gmao_root" action="action_maintenance_plan" sequence="30"/>
 </odoo>
