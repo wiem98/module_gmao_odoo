@@ -1,6 +1,15 @@
 from odoo import models, fields, api
 from datetime import date, timedelta
 
+from odoo.exceptions import ValidationError
+
+STATE_SELECTION = [
+    ('draft', 'Draft'),
+    ('active', 'Active'),
+    ('expired', 'Expired'),
+    ('cancelled', 'Cancelled'),
+]
+
 class MaintenanceServiceContract(models.Model):
     _name = 'maintenance.service.contract'
     _description = 'Maintenance Service Contract'
@@ -13,11 +22,59 @@ class MaintenanceServiceContract(models.Model):
 
     associated_equipments = fields.Many2many('maintenance.equipment', string="Associated Equipments")
     supplier_id = fields.Many2one('res.partner', string="Supplier", domain="[('supplier_rank', '>', 0)]")
+    company_id = fields.Many2one(
+        'res.company',
+        string='Company',
+        required=True,
+        default=lambda self: self.env.company,
+        readonly=True
+    )
     client_id = fields.Many2one('res.partner', string="Client", domain="[('customer_rank', '>', 0)]")
     cost = fields.Float(string="Contract Cost")
 
     sla_duration = fields.Integer(string="SLA Duration (Days)", help="SLA Duration for resolving maintenance requests.")
     sla_breached = fields.Boolean(string="SLA Breached", compute="_compute_sla_breached", store=True)
+    auto_renew = fields.Boolean(string="Auto Renew Contract")
+    renewal_period = fields.Integer(string="Renewal Period (days)", default=365)
+
+    state = fields.Selection(
+        selection=STATE_SELECTION,
+        string="Status",
+        default='draft',
+        tracking=True,
+        readonly=True
+    )
+
+    def action_confirm_contract(self):
+        for contract in self:
+            if not contract.contract_start_date or not contract.contract_end_date:
+                raise ValidationError("Veuillez renseigner les dates de début et de fin du contrat.")
+            contract.state = 'active'
+            contract.message_post(body="Contrat confirmé et activé.")
+
+    def action_reset_to_draft(self):
+        for contract in self:
+            if contract.state != 'active':
+                raise ValidationError("Seuls les contrats actifs peuvent être réinitialisés.")
+            contract.state = 'draft'
+            contract.message_post(body="Contrat réinitialisé à l'état brouillon (draft).")
+
+    def action_cancelled_contract(self):
+        for contract in self:
+            if contract.state != 'draft':
+                raise ValidationError("Seuls les contrats en brouillon peuvent être annulés.")
+            contract.state = 'cancelled'
+            contract.message_post(body="Contrat annulé.")
+
+
+    # renew contract automatically if the end date is near
+    def auto_renew_contracts(self):
+        for contract in self.search([('auto_renew', '=', True)]):
+            if contract.contract_end_date - date.today() <= timedelta(days=contract.renewal_alert_days):
+                contract.contract_start_date = contract.contract_end_date + timedelta(days=1)
+                contract.contract_end_date += timedelta(days=contract.renewal_period)
+                contract.message_post(body=f"Contract {contract.name} was automatically renewed.")
+
 
     @api.depends('sla_duration', 'contract_end_date')
     def _compute_sla_breached(self):
@@ -34,3 +91,21 @@ class MaintenanceServiceContract(models.Model):
         for contract in contracts:
             if contract.contract_end_date - date.today() <= timedelta(days=contract.renewal_alert_days):
                 contract.message_post(body=f"Contract '{contract.name}' is nearing its end date ({contract.contract_end_date}). Please consider renewing.")
+
+
+    def action_send_email(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Send Contract',
+            'res_model': 'wizard.send.contract.email',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_contract_id': self.id,
+            }
+        }
+        
+    def action_print_contract(self):
+        self.ensure_one()
+        return self.env.ref('module_gmao_odoo.report_maintenance_contract_pdf').report_action(self.id)

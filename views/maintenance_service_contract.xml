@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <odoo>
   <record id="view_maintenance_service_contract_list" model="ir.ui.view">
     <field name="name">maintenance.service.contract.list</field>
@@ -21,6 +22,38 @@
     <field name="model">maintenance.service.contract</field>
     <field name="arch" type="xml">
       <form string="Maintenance Service Contract">
+        <header>
+            <button 
+                    name="action_confirm_contract"
+                    type="object"
+                    string="Confirmer"
+                    class="btn-primary"
+                    invisible="state != 'draft'"/>
+            <button 
+                    name="action_cancelled_contract"
+                    type="object"
+                    string="Cancel"
+                    class="btn-secondary"
+                    invisible="state != 'draft' or id == False "/>
+            <button 
+                    name="action_reset_to_draft"
+                    type="object"
+                    string="Reset to Draft"
+                    class="btn-secondary"
+                    invisible="state != 'active'"/>
+
+            <button name="action_send_email" 
+                    string="Send by Email" 
+                    type="object" 
+                    class="btn-primary" 
+                    invisible="state != 'active'"/>
+            <button name="action_print_contract" 
+                    string="Print" 
+                    type="object" 
+                    class="btn-secondary" 
+                    invisible="state != 'active'"/>
+            <field name="state" widget="statusbar" statusbar_visible="draft,active"/>
+        </header>
         <sheet>
           <group>
             <group string="Contract Details">
@@ -35,6 +68,7 @@
               <field name="associated_equipments" widget="many2many_tags"/>
               <field name="supplier_id"/>
               <field name="client_id"/>
+              <field name="auto_renew"/>
             </group>
           </group>
           <group string="SLA Monitoring">
@@ -57,4 +91,13 @@
       </calendar>
     </field>
   </record>
+
+  <record id="report_maintenance_contract_pdf" model="ir.actions.report">
+      <field name="name">Contract PDF</field>
+      <field name="model">maintenance.service.contract</field>
+      <field name="report_type">qweb-pdf</field>
+      <field name="report_name">module_gmao_odoo.report_maintenance_contract_template</field>
+      <field name="print_report_name">(object._get_report_base_filename())</field>
+  </record>
+
 </odoo>

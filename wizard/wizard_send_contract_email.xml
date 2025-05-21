@@ -1,0 +1,28 @@
+<!-- views/wizard_send_contract_email.xml -->
+<odoo>
+  <record id="view_wizard_send_contract_email" model="ir.ui.view">
+    <field name="name">wizard.send.contract.email</field>
+    <field name="model">wizard.send.contract.email</field>
+    <field name="arch" type="xml">
+      <form string="Send Maintenance Contract Email">
+        <group>
+          <field name="email_to"/>
+          <field name="subject"/>
+          <field name="body" widget="html"/>
+        </group>
+        <footer>
+          <button string="Send" type="object" name="send_contract_email" class="btn-primary"/>
+          <button string="Cancel" special="cancel"/>
+        </footer>
+      </form>
+    </field>
+  </record>
+
+  <record id="action_wizard_send_contract_email" model="ir.actions.act_window">
+    <field name="name">Send Contract Email</field>
+    <field name="res_model">wizard.send.contract.email</field>
+    <field name="view_mode">form</field>
+    <field name="view_id" ref="view_wizard_send_contract_email"/>
+    <field name="target">new</field>
+  </record>
+</odoo>

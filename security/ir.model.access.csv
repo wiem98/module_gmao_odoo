@@ -4,3 +4,4 @@ access_equipment_consumable_line_user,equipment.consumable.line.user,model_equip
 access_gmao_bt_user,access_gmao_bt_user,model_gmao_bt,,1,1,1,1
 access_bt_stages_user,access_bt_stages_user,model_bt_stages,,1,1,1,1
 access_maintenance_service_contract_user,access_maintenance_service_contract_user,model_maintenance_service_contract,,1,1,1,1
+access_wizard_send_contract_email_user,access.wizard.send.contract.email.user,model_wizard_send_contract_email,base.group_user,1,1,1,1
