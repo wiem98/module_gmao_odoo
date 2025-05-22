@@ -109,3 +109,7 @@ class MaintenanceServiceContract(models.Model):
     def action_print_contract(self):
         self.ensure_one()
         return self.env.ref('module_gmao_odoo.report_maintenance_contract_pdf').report_action(self.id)
+    
+    def _get_report_base_filename(self):
+        self.ensure_one()
+        return f"Contract_{self.name.replace(' ', '_')}"

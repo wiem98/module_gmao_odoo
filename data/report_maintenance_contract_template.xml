@@ -1,0 +1,19 @@
+<odoo>
+    <template id="report_maintenance_contract_template">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="contract">
+                <t t-call="web.external_layout">
+                    <div class="page">
+                        <h2>Maintenance Contract: <t t-esc="contract.name"/></h2>
+                        <p><strong>Client:</strong> <t t-esc="contract.client_id.name"/></p>
+                        <p><strong>Start Date:</strong> <t t-esc="contract.contract_start_date"/></p>
+                        <p><strong>End Date:</strong> <t t-esc="contract.contract_end_date"/></p>
+                        <p><strong>Cost:</strong> <t t-esc="contract.cost"/> <t t-esc="contract.company_id.currency_id.symbol"/></p>
+                        <p><strong>Supplier:</strong> <t t-esc="contract.supplier_id.name"/></p>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+</odoo>
