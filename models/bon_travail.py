@@ -101,7 +101,7 @@ class GmaoBonTravail(models.Model):
 
     def action_print_bt(self):
         self.ensure_one()
-        return self.env.ref('gmao.action_report_gmao_bt').report_action(self)
+        return self.env.ref('module_gmao_odoo.action_report_gmao_bt').report_action(self)
 
 
     @api.model

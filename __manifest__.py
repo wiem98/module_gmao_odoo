@@ -9,8 +9,9 @@
     'data': [
         'data/bt_stage_data.xml', 
         'data/bt_cron.xml',
+        'data/report_maintenance_contract_template.xml',
         'views/bt_views.xml',
-        'report/bt_report.xml',
+        'reports/bt_report.xml',
         'security/ir.model.access.csv',
         'wizard/wizard_send_contract_email.xml',
         'views/maintenance_request_views.xml',
