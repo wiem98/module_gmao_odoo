@@ -10,6 +10,23 @@
                         <p><strong>End Date:</strong> <t t-esc="contract.contract_end_date"/></p>
                         <p><strong>Cost:</strong> <t t-esc="contract.cost"/> <t t-esc="contract.company_id.currency_id.symbol"/></p>
                         <p><strong>Supplier:</strong> <t t-esc="contract.supplier_id.name"/></p>
+                        <div class="row mt32">
+                            <div class="col-6">
+                                <strong>Client Signature:</strong><br/>
+                                <t t-if="contract.client_signature">
+                                    <img t-att-src="'data:image/png;base64,%s' % contract.client_signature.decode()"
+                                         style="max-height:100px; margin-top: 10px;"/>
+                                </t>
+                            </div>
+                            <div class="col-6">
+                                <strong>Company Signature:</strong><br/>
+                                <t t-if="contract.company_signature">
+                                    <img t-att-src="'data:image/png;base64,%s' % contract.company_signature.decode()"
+                                         style="max-height:100px; margin-top: 10px;"/>
+                                </t>
+                            </div>
+                        </div>
+
                     </div>
                 </t>
             </t>

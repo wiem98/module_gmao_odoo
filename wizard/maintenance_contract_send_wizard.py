@@ -2,6 +2,8 @@
 from odoo import models, fields, api
 import base64
 
+from odoo.exceptions import UserError
+
 class WizardSendContractEmail(models.TransientModel):
     _name = 'wizard.send.contract.email'
     _description = 'Wizard to Send Contract Email'
@@ -35,17 +37,20 @@ class WizardSendContractEmail(models.TransientModel):
     def send_contract_email(self):
         self.ensure_one()
 
-        # Send email without using mail.template
+        # Generate PDF and get attachment (from the contract model)
+        attachment = self.contract_id.generate_contract_pdf_attachment()
+
+        # Prepare email
         mail_values = {
             'email_to': self.email_to,
             'subject': self.subject,
             'body_html': self.body,
-            'body': self.body,
-            'auto_delete': True,
             'email_from': self.env.user.email or self.env.company.email,
+            'attachment_ids': [(4, attachment.id)],
+            'auto_delete': True,
         }
 
+        # Send email
         self.env['mail.mail'].create(mail_values).send()
 
         return {'type': 'ir.actions.act_window_close'}
-
