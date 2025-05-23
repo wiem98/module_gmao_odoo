@@ -33,7 +33,7 @@
                     type="object"
                     string="Confirmer"
                     class="btn-primary"
-                    invisible="state != 'draft'"/>
+                    invisible="state != 'draft' or id == False"/>
 
             <button 
                     name="action_activate_contract"
