@@ -1,7 +1,7 @@
 import base64
 from odoo import models, fields, api
 from datetime import date, timedelta
-
+from markupsafe import Markup
 from odoo.exceptions import UserError, ValidationError
 
 STATE_SELECTION = [
@@ -49,7 +49,7 @@ class MaintenanceServiceContract(models.Model):
         tracking=True,
         readonly=True
     )
-
+    
     def action_approve_contract(self):
         for contract in self:
             if not contract.client_signature or not contract.company_signature:

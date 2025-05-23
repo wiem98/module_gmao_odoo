@@ -13,6 +13,11 @@
         <field name="cost"/>
         <field name="client_id"/>
         <field name="supplier_id"/>
+        <field name="state" widget="badge" 
+              decoration-info="state == 'approved'"
+              decoration-success="state == 'active'"
+              decoration-warning="state == 'expired'"
+              decoration-danger="state == 'cancelled'"/>
       </list>
     </field>
   </record>
