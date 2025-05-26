@@ -167,7 +167,7 @@ class GmaoBonTravail(models.Model):
                     "La signature du superviseur est requise pour clôturer."
                 )
 
-            stage_cloture = self.env["project.task.type"].search(
+            stage_cloture = self.env["bt.stages"].search(
                 [("name", "=", "Clôturé")], limit=1
             )
             if not stage_cloture:
