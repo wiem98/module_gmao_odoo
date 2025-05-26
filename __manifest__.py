@@ -14,7 +14,7 @@
         'views/bt_views.xml',
         'reports/bt_report.xml',
         'security/ir.model.access.csv',
-        'wizard/wizard_send_contract_email.xml',
+        'reports/contract_report.xml',
         'views/maintenance_request_views.xml',
         'views/maintenance_request_menu_items.xml',
         'views/equipment_views.xml',

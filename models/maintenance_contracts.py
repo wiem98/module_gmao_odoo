@@ -1,8 +1,6 @@
-import base64
 from odoo import models, fields, api
 from datetime import date, timedelta
-from markupsafe import Markup
-from odoo.exceptions import UserError, ValidationError
+from odoo.exceptions import ValidationError
 
 STATE_SELECTION = [
     ("draft", "Draft"),
@@ -142,63 +140,6 @@ class MaintenanceServiceContract(models.Model):
                     body=f"Contract '{contract.name}' is nearing its end date ({contract.contract_end_date}). Please consider renewing."
                 )
 
-    def action_send_email(self):
-        self.ensure_one()
-        return {
-            "type": "ir.actions.act_window",
-            "name": "Send Contract",
-            "res_model": "wizard.send.contract.email",
-            "view_mode": "form",
-            "target": "new",
-            "context": {
-                "default_contract_id": self.id,
-            },
-        }
-
-    def action_print_contract(self):
-        self.ensure_one()
-        return self.env.ref(
-            "module_gmao_odoo.report_maintenance_contract_pdf"
-        ).report_action(self.id)
-
-    def _get_report_base_filename(self):
-        self.ensure_one()
-        return f"Contract_{self.name.replace(' ', '_')}"
-
-    def _get_mail_template(self):
-        """
-        :return: the correct mail template
-        """
-        return self.env.ref("account.email_template_edi_credit_note")
-
-    def generate_contract_pdf_attachment(self):
-        self.ensure_one()
-
-        # Get report definition
-        report = self.env["ir.actions.report"]._get_report_from_name(
-            "module_gmao_odoo.report_maintenance_contract_template"
-        )
-
-        if not report:
-            raise UserError("Contract report template not found.")
-
-        # Render the PDF
-        pdf_content, _ = report._render_qweb_pdf(self.id)
-
-        # Create and return attachment
-        attachment = self.env["ir.attachment"].create(
-            {
-                "name": f"{self._get_report_base_filename()}.pdf",
-                "type": "binary",
-                "datas": base64.b64encode(pdf_content),
-                "res_model": self._name,
-                "res_id": self.id,
-                "mimetype": "application/pdf",
-            }
-        )
-
-        return attachment
-
     @api.model
     def update_expired_contracts(self):
         today = date.today()
@@ -210,3 +151,19 @@ class MaintenanceServiceContract(models.Model):
             contract.message_post(
                 body="Le contrat est arrivé à expiration et a été automatiquement mis à jour en 'expiré'."
             )
+            
+    def action_print_contract(self):
+        self.ensure_one()
+        return self.env.ref(
+            "module_gmao_odoo.report_maintenance_contract_pdf"
+        ).report_action(self.id)
+
+    
+
+    def _get_report_base_filename(self):
+        self.ensure_one()
+        return f"Contract_{self.name.replace(' ', '_')}"
+    
+    def action_send_email(self):
+        self.ensure_one()
+        
