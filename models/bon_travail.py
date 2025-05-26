@@ -35,12 +35,20 @@ class GmaoBonTravail(models.Model):
     )
     technician_signature = fields.Binary(string="Signature Technicien")
     supervisor_signature = fields.Binary(string="Signature Superviseur")
+    
+    # Updated priority field to match maintenance request criticity
     priority = fields.Selection(
-        bt_stages.AVAILABLE_PRIORITIES,
+        selection=[
+            ('0', 'Very Low'),
+            ('1', 'Low'),
+            ('2', 'Normal'),
+            ('3', 'High')
+        ],
         string="Priority",
         index=True,
-        default=bt_stages.AVAILABLE_PRIORITIES[0][0],
+        help="Priority of this work order (matches Maintenance Request criticity)"
     )
+    
     schedule_date = fields.Date(string="Date Planifiée")
     contract_id = fields.Many2one(
         "maintenance.service.contract", string="Contrat de Maintenance"
@@ -61,6 +69,17 @@ class GmaoBonTravail(models.Model):
     contract_supplier_id = fields.Many2one(
         related="contract_id.supplier_id", store=True, readonly=True
     )
+    
+    # Fields for late notification tracking
+    late_notification_sent = fields.Boolean(
+        string="Notification de retard envoyée", 
+        default=False,
+        help="Indique si une notification de retard a déjà été envoyée"
+    )
+    last_late_notification_date = fields.Date(
+        string="Date dernière notification",
+        help="Date à laquelle la dernière notification de retard a été envoyée"
+    )
 
     is_stage_affecte = fields.Boolean(
         compute="_compute_is_stage_affecte", store=True
@@ -68,6 +87,13 @@ class GmaoBonTravail(models.Model):
 
     is_stage_realised = fields.Boolean(
         compute="_compute_is_stage_realised", store=True
+    )
+
+    # New field to link to maintenance request
+    maintenance_request_id = fields.Many2one(
+        'maintenance.request',
+        string="Maintenance Request",
+        help="The maintenance request that generated this work order"
     )
 
     @api.depends("stage_id")
@@ -90,14 +116,31 @@ class GmaoBonTravail(models.Model):
             if vals.get("name", "New") == "New":
                 vals["name"] = self.env["ir.sequence"].next_by_code("gmao.bt") or "New"
 
-            if vals.get("technician_id") :
+            if vals.get("technician_id"):
                 assigned_stage = self.env["bt.stages"].search(
                     [("name", "=", "Affecté")], limit=1
                 )
                 if assigned_stage:
                     vals["stage_id"] = assigned_stage.id
 
+
         return super().create(vals_list)
+
+    def write(self, vals):
+        # Reset notification flags if schedule date or stage changes
+        if 'schedule_date' in vals or 'stage_id' in vals:
+            vals.update({
+                'late_notification_sent': False,
+                'last_late_notification_date': False
+            })
+        
+        # Update priority if maintenance request criticity changes
+        if 'maintenance_request_id' in vals:
+            request = self.env['maintenance.request'].browse(vals['maintenance_request_id'])
+            if request:
+                vals['priority'] = request.priority
+        
+        return super().write(vals)
 
     def action_print_bt(self):
         self.ensure_one()
@@ -110,14 +153,13 @@ class GmaoBonTravail(models.Model):
         today = fields.Date.context_today(self)
 
         # 1. BT en retard → notifier le technicien
-        late_bts = self.search(
-            [
-                ("stage_id.name", "not in", ["Clôturé", "Réalisé"]),
-                ("schedule_date", "!=", False),
-                ("schedule_date", "<", today),
-                ("technician_id", "!=", False),
-            ]
-        )
+        late_bts = self.search([
+            ("stage_id.name", "not in", ["Clôturé", "Réalisé"]),
+            ("schedule_date", "!=", False),
+            ("schedule_date", "<", today),
+            ("technician_id", "!=", False),
+            ("late_notification_sent", "=", False),  # Only those not yet notified
+        ])
 
         for bt in late_bts:
             technician = bt.technician_id
@@ -138,6 +180,20 @@ class GmaoBonTravail(models.Model):
                     partner_ids=[technician.partner_id.id],
                     message_type="email",
                 )
+            
+            # Update notification tracking
+            bt.write({
+                'late_notification_sent': True,
+                'last_late_notification_date': today
+            })
+
+    def action_reset_late_notification(self):
+        """Action to manually reset late notification flags"""
+        self.write({
+            'late_notification_sent': False,
+            'last_late_notification_date': False
+        })
+        return True
 
     def action_set_realise(self):
         for bt in self:

@@ -121,7 +121,7 @@ class MaintenanceRequest(models.Model):
                 'intervention_type': request.maintenance_type,
                 'description': request.description or f"BT généré automatiquement depuis la demande {request.name}",
                 'schedule_date': fields.Date.today(),
-                'priority': {'low': '0', 'medium': '1', 'high': '2'}.get(request.criticity, '1'),
+                'priority': request.priority,
                 'used_parts_ids': [(6, 0, request.equipment_id.consumable_line_ids.mapped('product_id').ids)],
                 'contract_id': contract.id if contract else False,
 
