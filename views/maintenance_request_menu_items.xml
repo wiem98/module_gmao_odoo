@@ -38,13 +38,12 @@
   <record id="action_gmao_equipment_list" model="ir.actions.act_window">
     <field name="name">Equipment</field>
     <field name="res_model">maintenance.equipment</field>
-    <field name="view_mode">list,form</field>
+    <field name="view_mode">kanban,list,form</field>
   </record>
 
   <menuitem id="menu_gmao_equipment"
             name="Equipment"
             parent="menu_gmao_root"
-            action="action_gmao_equipment_list"
             sequence="20"/>
 
   <!-- Main Menu for Maintenance (Plans and Contracts) -->
@@ -80,6 +79,39 @@
           action="action_maintenance_service_contract"
           sequence="20"/>
 
+  <!-- Maintenance Teams action and menu -->
+<record id="action_gmao_maintenance_teams" model="ir.actions.act_window">
+  <field name="name">Maintenance Teams</field>
+  <field name="res_model">maintenance.team</field>
+  <field name="view_mode">list,kanban,form</field>
+</record>
+
+<menuitem id="menu_maintenance_teams"
+          name="Maintenance Teams"
+          parent="menu_maintenance_plan_root"
+          action="action_gmao_maintenance_teams"
+          sequence="30"/>
+
+  <!-- Equipment category action -->
+<record id="action_gmao_equipment_category" model="ir.actions.act_window">
+  <field name="name">equipment Category</field>
+  <field name="res_model">maintenance.equipment.category</field>
+  <field name="view_mode">list,kanban,form</field>
+</record>
+
+<!-- Submenu to show the Equipment List -->
+<menuitem id="menu_gmao_equipment_list"
+          name="All Equipment"
+          parent="menu_gmao_equipment"
+          action="action_gmao_equipment_list"
+          sequence="10"/>
+
+<!-- Submenu for Equipment Categories -->
+<menuitem id="menu_maintenance_category"
+          name="Equipment Category"
+          parent="menu_gmao_equipment"
+          action="action_gmao_equipment_category"
+          sequence="20"/>
 
   <record id="action_gmao_bt" model="ir.actions.act_window">
     <field name="name">Bon de Travail</field>
