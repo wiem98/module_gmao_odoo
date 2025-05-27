@@ -1,7 +1,7 @@
 {
     'name': 'GMAO',
     'version': '1.0',
-    'depends': ['maintenance', 'mail', 'project', 'product','base', 'stock'],
+    'depends': ['maintenance', 'mail', 'project', 'product','base', 'stock', 'sale_management'],
     'sequence': 10,
     'author': 'Wiem',
     'category': 'Maintenance',
@@ -11,6 +11,7 @@
         'data/bt_cron.xml',
         'data/contrat_cron.xml',
         'data/report_maintenance_contract_template.xml',
+        'data/project_stage_data.xml',
         'views/bt_views.xml',
         'reports/bt_report.xml',
         'security/ir.model.access.csv',
@@ -19,6 +20,7 @@
         'views/equipment_views.xml',
         'views/maintenance_plan_views.xml',
         'views/maintenance_service_contract.xml',
+        'views/project_task_view.xml',
         'views/maintenance_request_menu_items.xml',
 
     ],

@@ -1,5 +1,5 @@
 from odoo import models, fields, api
-from datetime import timedelta, date
+from datetime import timedelta, date, datetime
 from odoo.exceptions import UserError
 
 
@@ -26,6 +26,36 @@ class MaintenanceRequest(models.Model):
     contract_id = fields.Many2one('maintenance.plan', string="Related Contract", help="The maintenance contract related to this request.")
 
     request_cost = fields.Float(string="Request Cost", compute="_compute_request_cost", store=True)
+
+    def _get_or_create_stage(self, name, project):
+        """Get or create a task stage and link it to the given project"""
+        Stage = self.env['project.task.type']
+        stage = Stage.search([('name', '=', name)], limit=1)
+        if not stage:
+            stage = Stage.create({'name': name})
+        if project and project.id not in stage.project_ids.ids:
+            stage.project_ids = [(4, project.id)]
+        return stage
+    
+    def _get_stage_based_on_deadline(self, deadline, project):
+        today = fields.Date.context_today(self)
+
+        # Convert deadline to a date object if it's datetime
+        if isinstance(deadline, datetime):
+            deadline = deadline.date()
+
+        if not deadline:
+            return self._get_or_create_stage('Later', project)
+        elif deadline < today:
+            return self._get_or_create_stage('Overdue', project)
+        elif deadline == today:
+            return self._get_or_create_stage('Today', project)
+        elif deadline <= today + timedelta(days=7):
+            return self._get_or_create_stage('This Week', project)
+        else:
+            return self._get_or_create_stage('Later', project)
+
+
 
     def _get_active_contract(self):
         self.ensure_one()
@@ -88,22 +118,20 @@ class MaintenanceRequest(models.Model):
                         if intervention_proj_stage:
                             request.project_id.stage_id = intervention_proj_stage.id
 
-                    TaskType = self.env.get('project.task.type')
-                    if TaskType:
-                        task_stage = TaskType.search([
-                            ('name', 'ilike', 'Intervention'),
-                            ('project_ids', 'in', request.project_id.id)
-                        ], limit=1)
-                    else:
-                        task_stage = False
+                    deadline = request.schedule_date
+                    project = request.project_id
+
+                    task_stage = request._get_stage_based_on_deadline(deadline, project)
+
 
                     self.env['project.task'].create({
                         'name': request.name,
-                        'project_id': request.project_id.id,
+                        'project_id': project.id,
+                        'stage_id': task_stage.id,
                         'maintenance_request_id': request.id,
                         'user_ids': [(6, 0, [request.user_id.id])] if request.user_id else False,
-                        'stage_id': task_stage.id if task_stage else False,
                         'description': f'Automatically created for maintenance: {request.name}',
+                        'date_deadline': request.schedule_date,
                     })
 
                 except Exception as e:
@@ -288,8 +316,3 @@ class MaintenanceEquipment(models.Model):
             },
             'target': 'current',
         }
-
-class ProjectTask(models.Model):
-    _inherit = 'project.task'
-
-    maintenance_request_id = fields.Many2one('maintenance.request', string="Maintenance Request")

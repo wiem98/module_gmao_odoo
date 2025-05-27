@@ -1,0 +1,152 @@
+<odoo>
+ <record id="view_task_kanban_inherit_checkin" model="ir.ui.view">
+    <field name="name">project.task.kanban.inherit.checkin</field>
+    <field name="model">project.task</field>
+    <field name="inherit_id" ref="project.view_task_kanban"/> <!-- ✅ correct ref here -->
+    <field name="arch" type="xml">
+        <xpath expr="//field[@name='name']" position="after">
+             <field name="checkin_state" invisible="1"/>
+            <field name="total_hours_spent" invisible="1"/>
+
+            <div class="d-flex flex-column align-items-start gap-1 small text-muted mt-2">
+                <!-- Status Line -->
+                <div class="d-flex align-items-center gap-2">
+                    <span t-if="record.checkin_state.raw_value == 'in'" class="badge bg-success rounded-pill px-2 py-1" style="font-size: 10px;">
+                        Checked In
+                    </span>
+                    <span t-else="" class="badge bg-secondary rounded-pill px-2 py-1" style="font-size: 10px;">
+                        Checked Out
+                    </span>
+
+                    <div class="d-flex align-items-center gap-1">
+                        <i class="fa fa-clock-o" style="font-size: 11px;" title="Total Hours Spent"/>
+                        <field name="total_hours_spent" widget="float_time"/>
+                    </div>
+                </div>
+
+                <!-- Button Line -->
+                <div class="mt-2">
+                    <button 
+                        type="object"
+                        name="action_toggle_checkin"
+                        t-attf-class="btn btn-xs fw-bold #{record.checkin_state.raw_value == 'out' ? 'btn-success' : 'btn-danger'}"
+                        style="font-size: 11px; padding: 2px 8px;"
+                    >
+                        <t t-if="record.checkin_state.raw_value == 'out'">Check In</t>
+                        <t t-else="">Check Out</t>
+                    </button>
+                </div>
+
+            </div>
+        </xpath>
+    </field>
+</record>
+
+<record id="view_project_kanban_inherit_time_spent" model="ir.ui.view">
+    <field name="name">project.project.kanban.inherit.time.spent</field>
+    <field name="model">project.project</field>
+    <field name="inherit_id" ref="project.view_project_kanban"/>
+    <field name="arch" type="xml">
+        <xpath expr="//div[contains(@class, 'min-w-0')]" position="inside">
+            <!-- Load the needed fields invisibly -->
+            <field name="is_new_project" invisible="1"/>
+            <field name="opened_user_ids" invisible="1"/>
+            <field name="total_time_spent" invisible="1"/>
+            <field name="current_user_id" invisible="1"/>
+
+
+            <div class="d-flex align-items-center gap-2 mt-1 small text-muted">
+
+                <!-- "New" badge -->
+                <t t-if="record.is_new_project.raw_value and !(record.opened_user_ids.raw_value || []).includes(record.current_user_id.raw_value)">
+                    <span class="badge bg-primary border rounded-pill px-2 py-1" style="font-size: 10px;">
+                        <i class="fa fa-star me-1" title="New Project" aria-label="New Project"/>
+                        New
+                    </span>
+                </t>
+
+                <!-- Time spent badge -->
+                <t t-if="record.total_time_spent.raw_value and record.total_time_spent.raw_value > 0">
+                    <span class="badge bg-light border rounded-pill px-2 py-1" style="font-size: 10px;">
+                        <i class="fa fa-clock-o me-1" title="Time Spent" aria-label="Time Spent"/>
+                        <field name="total_time_spent" widget="float_time"/>
+                    </span>
+                </t>
+                
+                <!-- Not started badge -->
+                <t t-else="">
+                    <span class="badge bg-light border rounded-pill px-2 py-1" style="font-size: 10px;">
+                        <i class="fa fa-clock-o me-1" title="Time Spent" aria-label="Time Spent"/>
+                        Not Started
+                    </span>
+                </t>
+
+            </div>
+        </xpath>
+    </field>
+</record>
+
+<record id="view_project_list_inherit_total_time_spent" model="ir.ui.view">
+    <field name="name">project.project.list.inherit.total.time.spent</field>
+    <field name="model">project.project</field>
+    <field name="inherit_id" ref="project.view_project"/>
+    <field name="arch" type="xml">
+        <xpath expr="//list" position="inside">
+            <field name="total_time_spent" string="Hours Spent" widget="float_time" optional="show"/>
+        </xpath>
+    </field>
+</record>
+<record id="view_task_list_inherit_total_time_spent" model="ir.ui.view">
+    <field name="name">project.task.list.inherit.total.time.spent</field>
+    <field name="model">project.task</field>
+    <field name="inherit_id" ref="project.view_task_tree2"/>
+    <field name="arch" type="xml">
+        <xpath expr="//list" position="inside">
+            <field name="total_hours_spent" string="Hours Spent" widget="float_time" optional="show"/>
+        </xpath>
+    </field>
+</record>
+<record id="view_task_pivot_inherit_total_hours_spent" model="ir.ui.view">
+    <field name="name">project.task.pivot.inherit.total.hours.spent</field>
+    <field name="model">project.task</field>
+    <field name="inherit_id" ref="project.view_project_task_pivot_inherit"/>
+    <field name="arch" type="xml">
+        <xpath expr="/pivot" position="inside">
+            <field name="total_hours_spent" type="measure" string="Hours Spent"/>
+        </xpath>
+    </field>
+</record>
+<record id="view_account_move_add_main_doeuvre" model="ir.ui.view">
+  <field name="name">account.move.form.add.maindoeuvre</field>
+  <field name="model">account.move</field>
+  <field name="inherit_id" ref="account.view_move_form"/>
+  <field name="arch" type="xml">
+    <xpath expr="//form/header" position="inside">
+      <button name="action_add_main_doeuvre"
+              string="Add Main-d'œuvre"
+              type="object"
+              class="btn-primary"
+              invisible="state != 'draft'"/>
+    </xpath>
+  </field>
+</record>
+
+<record id="action_gmao_my_tasks" model="ir.actions.act_window">
+    <field name="name">My Tasks</field>
+    <field name="res_model">project.task</field>
+    <field name="view_mode">kanban,list,form</field>
+    <field name="domain">[
+        ('user_ids', 'in', [uid]),
+        ('maintenance_request_id', '!=', False)
+    ]</field>
+    <field name="context">{}</field>
+    <field name="help" type="html">
+      <p class="o_view_nocontent_smiling_face">
+        You have no assigned tasks.
+      </p>
+    </field>
+</record>
+
+
+
+</odoo>

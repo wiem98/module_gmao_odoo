@@ -28,6 +28,13 @@
             action="action_gmao_maintenance_request"
             sequence="10"/>
 
+  <menuitem id="menu_gmao_my_tasks"
+          name="My Tasks"
+          parent="menu_gmao_tickets"
+          action="action_gmao_my_tasks"
+          sequence="20"/>
+
+
   <record id="action_gmao_equipment_list" model="ir.actions.act_window">
     <field name="name">Equipment</field>
     <field name="res_model">maintenance.equipment</field>

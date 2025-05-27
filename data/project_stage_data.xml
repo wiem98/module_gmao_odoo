@@ -1,0 +1,7 @@
+<odoo>
+    <record id="project_project_stage_2" model="project.project.stage">
+        <field name="sequence">30</field>
+        <field name="name">Intervention</field>
+        <field name="fold" eval="True"/>
+    </record>
+</odoo>
