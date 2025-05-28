@@ -52,7 +52,6 @@ class MaintenanceServiceContract(models.Model):
     sla_breached = fields.Boolean(
         string="SLA Breached", compute="_compute_sla_breached", store=True
     )
-    auto_renew = fields.Boolean(string="Auto Renew Contract")
     renewal_period = fields.Integer(string="Renewal Period (days)", default=365)
 
     client_signature = fields.Binary(string="Client Signatory")
@@ -104,19 +103,6 @@ class MaintenanceServiceContract(models.Model):
             contract.state = "cancelled"
             contract.message_post(body="Contrat annulé.")
 
-    # renew contract automatically if the end date is near
-    def auto_renew_contracts(self):
-        for contract in self.search([("auto_renew", "=", True)]):
-            if contract.contract_end_date - date.today() <= timedelta(
-                days=contract.renewal_alert_days
-            ):
-                contract.contract_start_date = contract.contract_end_date + timedelta(
-                    days=1
-                )
-                contract.contract_end_date += timedelta(days=contract.renewal_period)
-                contract.message_post(
-                    body=f"Contract {contract.name} was automatically renewed."
-                )
 
     @api.depends("sla_duration", "contract_end_date")
     def _compute_sla_breached(self):
@@ -143,15 +129,17 @@ class MaintenanceServiceContract(models.Model):
     @api.model
     def update_expired_contracts(self):
         today = date.today()
-        expired_contracts = self.search(
-            [("contract_end_date", "<", today), ("state", "=", "active")]
-        )
+        expired_contracts = self.search([
+            ("contract_end_date", "<", today),
+            ("state", "=", "active"),
+            ("contract_end_date", "!=", False),
+        ])
         for contract in expired_contracts:
             contract.state = "expired"
             contract.message_post(
-                body="Le contrat est arrivé à expiration et a été automatiquement mis à jour en 'expiré'."
+                body=f"Le contrat '{contract.name}' est arrivé à expiration ({contract.contract_end_date}) et a été automatiquement mis à jour en 'expiré'."
             )
-            
+
     def action_print_contract(self):
         self.ensure_one()
         return self.env.ref(

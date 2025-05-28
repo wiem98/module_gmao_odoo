@@ -80,7 +80,6 @@
               <field name="associated_equipments" widget="many2many_tags"/>
               <field name="supplier_id"/>
               <field name="client_id"/>
-              <field name="auto_renew"/>
             </group>
             <group string="Signatures" col="2">
                 <field name="client_signature" widget="signature"/>
