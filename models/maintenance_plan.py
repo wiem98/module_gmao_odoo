@@ -27,6 +27,11 @@ class MaintenancePlan(models.Model):
     project_id = fields.Many2one('project.project', string="Project")
     responsible_id = fields.Many2one('res.users', string="Technician")
     active = fields.Boolean(default=True)
+    maintenance_request_id = fields.Many2one(
+        'maintenance.request', 
+        string="Maintenance Request",
+        help="The maintenance request this plan originates from."
+    )
 
 
     mtbf_days = fields.Integer(string="MTBF (Days)")

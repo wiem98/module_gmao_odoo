@@ -197,28 +197,42 @@ class MaintenanceRequest(models.Model):
 
     def open_or_create_plan(self):
         self.ensure_one()
-        
-        # Validate that equipment_id is set
+
         if not self.equipment_id:
             raise UserError("Please set the Equipment field before creating a Maintenance Plan.")
-        
-        # Proceed with plan creation or opening
-        self._create_or_update_plan()
 
-        plan = self.env['maintenance.plan'].search([
+        # Search for a plan linked to *this* request
+        existing_plan = self.env['maintenance.plan'].search([
+            ('maintenance_request_id', '=', self.id),
             ('equipment_id', '=', self.equipment_id.id),
             ('maintenance_type', '=', self.maintenance_type)
         ], limit=1)
 
-        if plan:
-            return {
-                'type': 'ir.actions.act_window',
-                'name': 'Maintenance Plan',
-                'res_model': 'maintenance.plan',
-                'view_mode': 'form',
-                'res_id': plan.id,
-                'target': 'new',
-            }
+        values = {
+            'name': f"{self.name} Plan",
+            'maintenance_type': self.maintenance_type,
+            'equipment_id': self.equipment_id.id,
+            'project_id': self.project_id.id if self.project_id else False,
+            'responsible_id': self.user_id.id if self.user_id else False,
+            'active': True,
+            'maintenance_request_id': self.id,
+        }
+
+        if existing_plan:
+            existing_plan.write(values)
+            plan = existing_plan
+        else:
+            plan = self.env['maintenance.plan'].create(values)
+
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Maintenance Plan',
+            'res_model': 'maintenance.plan',
+            'view_mode': 'form',
+            'res_id': plan.id,
+            'target': 'new',
+        }
+
 
 
 class MaintenanceEquipment(models.Model):
