@@ -4,39 +4,52 @@ from odoo.exceptions import UserError
 
 
 class MaintenanceRequest(models.Model):
-    _inherit = 'maintenance.request'
+    _inherit = "maintenance.request"
 
-    project_id = fields.Many2one('project.project', string="Project")
+    project_id = fields.Many2one("project.project", string="Project")
 
-    criticity = fields.Selection([
-        ('low', 'Faible'),
-        ('medium', 'Moyenne'),
-        ('high', 'Critique')
-    ], string="Criticité", default="medium")
+    criticity = fields.Selection(
+        [("low", "Faible"), ("medium", "Moyenne"), ("high", "Critique")],
+        string="Criticité",
+        default="medium",
+    )
 
-    maintenance_type = fields.Selection([
-        ('preventive', 'Préventive'),
-        ('corrective', 'Corrective'),
-        ('curative', 'Curative'),
-        ('systematic', 'Systématique'),
-        ('conditional', 'Conditionnelle'),
-        ('predictive', 'Prédictive'),
-    ], string="Maintenance Type")
+    maintenance_type = fields.Selection(
+        [
+            ("preventive", "Préventive"),
+            ("corrective", "Corrective"),
+            ("curative", "Curative"),
+            ("systematic", "Systématique"),
+            ("conditional", "Conditionnelle"),
+            ("predictive", "Prédictive"),
+        ],
+        string="Maintenance Type",
+    )
 
-    contract_id = fields.Many2one('maintenance.plan', string="Related Contract", help="The maintenance contract related to this request.")
+    maintenance_plan_ids = fields.One2many(
+        "maintenance.plan", "maintenance_request_id", string="Related Maintenance Plans"
+    )
 
-    request_cost = fields.Float(string="Request Cost", compute="_compute_request_cost", store=True)
+    contract_id = fields.Many2one(
+        "maintenance.plan",
+        string="Related Contract",
+        help="The maintenance contract related to this request.",
+    )
+
+    request_cost = fields.Float(
+        string="Request Cost", compute="_compute_request_cost", store=True
+    )
 
     def _get_or_create_stage(self, name, project):
         """Get or create a task stage and link it to the given project"""
-        Stage = self.env['project.task.type']
-        stage = Stage.search([('name', '=', name)], limit=1)
+        Stage = self.env["project.task.type"]
+        stage = Stage.search([("name", "=", name)], limit=1)
         if not stage:
-            stage = Stage.create({'name': name})
+            stage = Stage.create({"name": name})
         if project and project.id not in stage.project_ids.ids:
             stage.project_ids = [(4, project.id)]
         return stage
-    
+
     def _get_stage_based_on_deadline(self, deadline, project):
         today = fields.Date.context_today(self)
 
@@ -45,31 +58,31 @@ class MaintenanceRequest(models.Model):
             deadline = deadline.date()
 
         if not deadline:
-            return self._get_or_create_stage('Later', project)
+            return self._get_or_create_stage("Later", project)
         elif deadline < today:
-            return self._get_or_create_stage('Overdue', project)
+            return self._get_or_create_stage("Overdue", project)
         elif deadline == today:
-            return self._get_or_create_stage('Today', project)
+            return self._get_or_create_stage("Today", project)
         elif deadline <= today + timedelta(days=7):
-            return self._get_or_create_stage('This Week', project)
+            return self._get_or_create_stage("This Week", project)
         else:
-            return self._get_or_create_stage('Later', project)
-
-
+            return self._get_or_create_stage("Later", project)
 
     def _get_active_contract(self):
         self.ensure_one()
-        Contract = self.env['maintenance.service.contract']
+        Contract = self.env["maintenance.service.contract"]
         today = fields.Date.context_today(self)
 
-        return Contract.search([
-            ('associated_equipments', 'in', self.equipment_id.id),
-            ('contract_start_date', '<=', today),
-            ('contract_end_date', '>=', today)
-        ], limit=1)
+        return Contract.search(
+            [
+                ("associated_equipments", "in", self.equipment_id.id),
+                ("contract_start_date", "<=", today),
+                ("contract_end_date", ">=", today),
+            ],
+            limit=1,
+        )
 
-
-    @api.depends('contract_id')
+    @api.depends("contract_id")
     def _compute_request_cost(self):
         for request in self:
             if request.contract_id and request.contract_id.cost:
@@ -90,10 +103,10 @@ class MaintenanceRequest(models.Model):
                 request.equipment_id.create_or_update_predictive_plan()
 
     def _auto_assign(self):
-        if self.criticity == 'high':
-            user = self.env.ref('base.user_admin')
+        if self.criticity == "high":
+            user = self.env.ref("base.user_admin")
         else:
-            user = self.env['res.users'].search([], limit=1)
+            user = self.env["res.users"].search([], limit=1)
         self.user_id = user
 
     @api.model_create_multi
@@ -110,11 +123,11 @@ class MaintenanceRequest(models.Model):
             # Update project stage and create task
             if request.project_id:
                 try:
-                    ProjectStage = self.env.get('project.stage')
+                    ProjectStage = self.env.get("project.stage")
                     if ProjectStage:
-                        intervention_proj_stage = ProjectStage.search([
-                            ('name', 'ilike', 'Intervention')
-                        ], limit=1)
+                        intervention_proj_stage = ProjectStage.search(
+                            [("name", "ilike", "Intervention")], limit=1
+                        )
                         if intervention_proj_stage:
                             request.project_id.stage_id = intervention_proj_stage.id
 
@@ -123,71 +136,92 @@ class MaintenanceRequest(models.Model):
 
                     task_stage = request._get_stage_based_on_deadline(deadline, project)
 
-
-                    self.env['project.task'].create({
-                        'name': request.name,
-                        'project_id': project.id,
-                        'stage_id': task_stage.id,
-                        'maintenance_request_id': request.id,
-                        'user_ids': [(6, 0, [request.user_id.id])] if request.user_id else False,
-                        'description': f'Automatically created for maintenance: {request.name}',
-                        'date_deadline': request.schedule_date,
-                    })
+                    self.env["project.task"].create(
+                        {
+                            "name": request.name,
+                            "project_id": project.id,
+                            "stage_id": task_stage.id,
+                            "maintenance_request_id": request.id,
+                            "user_ids": (
+                                [(6, 0, [request.user_id.id])]
+                                if request.user_id
+                                else False
+                            ),
+                            "description": f"Automatically created for maintenance: {request.name}",
+                            "date_deadline": request.schedule_date,
+                        }
+                    )
 
                 except Exception as e:
                     request.message_post(body=f"⚠️ Project integration failed: {str(e)}")
 
             # Créer automatiquement un bon de travail
-            bt_model = self.env['gmao.bt']
+            bt_model = self.env["gmao.bt"]
             contract = request._get_active_contract()
             bt_vals = {
-                'name': f"New BT for {request.name}",
-                'equipment_id': request.equipment_id.id,
-                'intervention_type': request.maintenance_type,
-                'technician_id': request.equipment_id.technician_user_id.id if request.equipment_id.technician_user_id else False,
-                'supervisor_id': request.user_id.id,
-                'intervention_type': request.maintenance_type,
-                'description': request.description or f"BT généré automatiquement depuis la demande {request.name}",
-                'schedule_date': fields.Date.today(),
-                'priority': request.priority,
-                'used_parts_ids': [(6, 0, request.equipment_id.consumable_line_ids.mapped('product_id').ids)],
-                'contract_id': contract.id if contract else False,
-
+                "name": f"New BT for {request.name}",
+                "equipment_id": request.equipment_id.id,
+                "intervention_type": request.maintenance_type,
+                "technician_id": (
+                    request.equipment_id.technician_user_id.id
+                    if request.equipment_id.technician_user_id
+                    else False
+                ),
+                "supervisor_id": request.user_id.id,
+                "intervention_type": request.maintenance_type,
+                "description": request.description
+                or f"BT généré automatiquement depuis la demande {request.name}",
+                "schedule_date": fields.Date.today(),
+                "priority": request.priority,
+                "used_parts_ids": [
+                    (
+                        6,
+                        0,
+                        request.equipment_id.consumable_line_ids.mapped(
+                            "product_id"
+                        ).ids,
+                    )
+                ],
+                "contract_id": contract.id if contract else False,
             }
 
             bt_record = bt_model.create(bt_vals)
             # Add Activity to the BT record
             if bt_record.technician_id and bt_record.schedule_date:
                 bt_record.activity_schedule(
-                    'mail.activity_data_todo',
+                    "mail.activity_data_todo",
                     summary=bt_record.description,
                     user_id=bt_record.technician_id.id,
-                    date_deadline=bt_record.schedule_date
+                    date_deadline=bt_record.schedule_date,
                 )
 
         return requests
+
     def _create_or_update_plan(self):
         self.ensure_one()
-        Plan = self.env['maintenance.plan']
+        Plan = self.env["maintenance.plan"]
 
-        existing_plan = Plan.search([
-            ('equipment_id', '=', self.equipment_id.id),
-            ('maintenance_type', '=', self.maintenance_type)
-        ], limit=1)
+        existing_plan = Plan.search(
+            [
+                ("equipment_id", "=", self.equipment_id.id),
+                ("maintenance_type", "=", self.maintenance_type),
+            ],
+            limit=1,
+        )
 
         interval = 30
         next_date = date.today() + timedelta(days=interval)
 
         values = {
-            'name': f"{self.maintenance_type.capitalize()} Plan for {self.name}",
-            'equipment_id': self.equipment_id.id,
-            'project_id': self.project_id.id if self.project_id else False,
-            'responsible_id': self.user_id.id if self.user_id else False,
-            'maintenance_type': self.maintenance_type,
-            'interval_number': interval,
-            'interval_type': 'days',
-            'next_date': next_date,
-            'active': True,
+            "name": f"{self.maintenance_type.capitalize()} Plan for {self.name}",
+            "equipment_id": self.equipment_id.id,
+            "project_id": self.project_id.id if self.project_id else False,
+            "responsible_id": self.user_id.id if self.user_id else False,
+            "maintenance_type": self.maintenance_type,
+            "interval_number": interval,
+            "interval_type": "days",
+            "next_date": next_date,
+            "active": True,
         }
 
         if existing_plan:
@@ -199,116 +233,150 @@ class MaintenanceRequest(models.Model):
         self.ensure_one()
 
         if not self.equipment_id:
-            raise UserError("Please set the Equipment field before creating a Maintenance Plan.")
+            raise UserError(
+                "Please set the Equipment field before creating a Maintenance Plan."
+            )
 
         # Search for a plan linked to *this* request
-        existing_plan = self.env['maintenance.plan'].search([
-            ('maintenance_request_id', '=', self.id),
-            ('equipment_id', '=', self.equipment_id.id),
-            ('maintenance_type', '=', self.maintenance_type)
-        ], limit=1)
+        existing_plan = self.env["maintenance.plan"].search(
+            [
+                ("maintenance_request_id", "=", self.id),
+                ("equipment_id", "=", self.equipment_id.id),
+                ("maintenance_type", "=", self.maintenance_type),
+            ],
+            limit=1,
+        )
 
         values = {
-            'name': f"{self.name} Plan",
-            'maintenance_type': self.maintenance_type,
-            'equipment_id': self.equipment_id.id,
-            'project_id': self.project_id.id if self.project_id else False,
-            'responsible_id': self.user_id.id if self.user_id else False,
-            'active': True,
-            'maintenance_request_id': self.id,
+            "name": f"{self.name} Plan",
+            "maintenance_type": self.maintenance_type,
+            "equipment_id": self.equipment_id.id,
+            "project_id": self.project_id.id if self.project_id else False,
+            "responsible_id": self.user_id.id if self.user_id else False,
+            "active": True,
+            "maintenance_request_id": self.id,
         }
 
         if existing_plan:
             existing_plan.write(values)
             plan = existing_plan
         else:
-            plan = self.env['maintenance.plan'].create(values)
+            plan = self.env["maintenance.plan"].create(values)
 
         return {
-            'type': 'ir.actions.act_window',
-            'name': 'Maintenance Plan',
-            'res_model': 'maintenance.plan',
-            'view_mode': 'form',
-            'res_id': plan.id,
-            'target': 'new',
+            "type": "ir.actions.act_window",
+            "name": "Maintenance Plan",
+            "res_model": "maintenance.plan",
+            "view_mode": "form",
+            "res_id": plan.id,
+            "target": "new",
         }
 
 
-
 class MaintenanceEquipment(models.Model):
-    _inherit = 'maintenance.equipment'
+    _inherit = "maintenance.equipment"
 
     equipment_type = fields.Char(string="Type")
     brand = fields.Char(string="Brand")
     model_name = fields.Char(string="Model")
     serial_number = fields.Char(string="Serial No.")
-    status = fields.Selection([
-        ('in_use', 'In Use'),
-        ('standby', 'Standby'),
-        ('out_of_order', 'Out of Order'),
-        ('scrapped', 'Scrapped'),
-    ], string="Status", default='in_use')
-    
-    consumable_line_ids = fields.One2many('equipment.consumable.line','equipment_id',string='Consumables')
-    parent_id = fields.Many2one('maintenance.equipment', string="Parent Equipment")
-    child_ids = fields.One2many('maintenance.equipment', 'parent_id', string="Sub-components")
-    bt_ids = fields.One2many('gmao.bt', 'equipment_id', string="Historique des BT")
-    technician_user_id = fields.Many2one('res.users', string='Responsible', required=True, tracking=True, default=lambda self: self.env.uid)
+    status = fields.Selection(
+        [
+            ("in_use", "In Use"),
+            ("standby", "Standby"),
+            ("out_of_order", "Out of Order"),
+            ("scrapped", "Scrapped"),
+        ],
+        string="Status",
+        default="in_use",
+    )
+
+    consumable_line_ids = fields.One2many(
+        "equipment.consumable.line", "equipment_id", string="Consumables"
+    )
+    parent_id = fields.Many2one("maintenance.equipment", string="Parent Equipment")
+    child_ids = fields.One2many(
+        "maintenance.equipment", "parent_id", string="Sub-components"
+    )
+    bt_ids = fields.One2many("gmao.bt", "equipment_id", string="Historique des BT")
+    technician_user_id = fields.Many2one(
+        "res.users",
+        string="Responsible",
+        required=True,
+        tracking=True,
+        default=lambda self: self.env.uid,
+    )
 
     installation_date = fields.Date(string="Installation Date")
     scrap_date = fields.Date(string="Scrap Date")
     maintenance_cycle = fields.Text(string="Maintenance Cycle Notes")
 
-    document_ids = fields.Many2many('ir.attachment', string="Documents")
+    document_ids = fields.Many2many("ir.attachment", string="Documents")
     estimated_next_failure = fields.Date(
-        string="Estimated Next Failure", compute="_compute_next_failure", store=True)
-    expected_mtbf = fields.Integer(string="Expected MTBF (Days)", help="Average days between failures")
+        string="Estimated Next Failure", compute="_compute_next_failure", store=True
+    )
+    expected_mtbf = fields.Integer(
+        string="Expected MTBF (Days)", help="Average days between failures"
+    )
     latest_failure_date = fields.Date(string="Last Failure Date")
-    @api.depends('latest_failure_date', 'effective_date', 'expected_mtbf')
+
+    @api.depends("latest_failure_date", "effective_date", "expected_mtbf")
     def _compute_next_failure(self):
         for eq in self:
             if eq.latest_failure_date and eq.expected_mtbf:
-                eq.estimated_next_failure = eq.latest_failure_date + timedelta(days=eq.expected_mtbf)
+                eq.estimated_next_failure = eq.latest_failure_date + timedelta(
+                    days=eq.expected_mtbf
+                )
             elif eq.effective_date and eq.expected_mtbf:
-                eq.estimated_next_failure = eq.effective_date + timedelta(days=eq.expected_mtbf)
+                eq.estimated_next_failure = eq.effective_date + timedelta(
+                    days=eq.expected_mtbf
+                )
             else:
                 eq.estimated_next_failure = False
 
     def compute_mtbf_from_failures(self):
-        Maintenance = self.env['maintenance.request']
+        Maintenance = self.env["maintenance.request"]
         for eq in self:
-            failures = Maintenance.search([
-                ('equipment_id', '=', eq.id),
-                ('maintenance_type', 'in', ['corrective', 'curative', 'predictive']),
-                ('request_date', '!=', False)
-            ], order='request_date asc')
+            failures = Maintenance.search(
+                [
+                    ("equipment_id", "=", eq.id),
+                    (
+                        "maintenance_type",
+                        "in",
+                        ["corrective", "curative", "predictive"],
+                    ),
+                    ("request_date", "!=", False),
+                ],
+                order="request_date asc",
+            )
 
             if len(failures) >= 2:
                 intervals = [
-                    (failures[i].request_date - failures[i-1].request_date).days
+                    (failures[i].request_date - failures[i - 1].request_date).days
                     for i in range(1, len(failures))
                 ]
                 eq.expected_mtbf = sum(intervals) // len(intervals)
                 eq.latest_failure_date = failures[-1].request_date
+
     def create_or_update_predictive_plan(self):
-        MaintenancePlan = self.env['maintenance.plan']
+        MaintenancePlan = self.env["maintenance.plan"]
         for eq in self:
             if not eq.expected_mtbf or not eq.latest_failure_date:
                 continue
-            
-            plan = MaintenancePlan.search([
-                ('equipment_id', '=', eq.id),
-                ('maintenance_type', '=', 'predictive')
-            ], limit=1)
+
+            plan = MaintenancePlan.search(
+                [("equipment_id", "=", eq.id), ("maintenance_type", "=", "predictive")],
+                limit=1,
+            )
 
             values = {
-                'name': f"Predictive Plan for {eq.name}",
-                'equipment_id': eq.id,
-                'maintenance_type': 'predictive',
-                'interval_number': eq.expected_mtbf,
-                'interval_type': 'days',
-                'next_date': eq.latest_failure_date + timedelta(days=eq.expected_mtbf),
-                'active': True,
+                "name": f"Predictive Plan for {eq.name}",
+                "equipment_id": eq.id,
+                "maintenance_type": "predictive",
+                "interval_number": eq.expected_mtbf,
+                "interval_type": "days",
+                "next_date": eq.latest_failure_date + timedelta(days=eq.expected_mtbf),
+                "active": True,
             }
 
             if plan:
@@ -316,17 +384,14 @@ class MaintenanceEquipment(models.Model):
             else:
                 MaintenancePlan.create(values)
 
-
     def action_open_bt_history(self):
         self.ensure_one()
         return {
-            'name': f'Historique des BT - {self.name}',
-            'type': 'ir.actions.act_window',
-            'res_model': 'gmao.bt',
-            'view_mode': 'tree,form',
-            'domain': [('equipment_id', '=', self.id)],
-            'context': {
-                'default_equipment_id': self.id
-            },
-            'target': 'current',
+            "name": f"Historique des BT - {self.name}",
+            "type": "ir.actions.act_window",
+            "res_model": "gmao.bt",
+            "view_mode": "tree,form",
+            "domain": [("equipment_id", "=", self.id)],
+            "context": {"default_equipment_id": self.id},
+            "target": "current",
         }

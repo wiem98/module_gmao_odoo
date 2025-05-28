@@ -30,6 +30,20 @@
           <field name="project_id" domain="[('stage_id.name', '=', 'Done')]"/>
         </xpath>
 
+        <xpath expr="//notebook" position="inside">
+              <page string="Maintenance Plans">
+                <field name="maintenance_plan_ids">
+                  <list editable="bottom">
+                    <field name="name"/>
+                    <field name="maintenance_type"/>
+                    <field name="interval_number"/>
+                    <field name="interval_type"/>
+                    <field name="next_date"/>
+                    <field name="active"/>
+                  </list>
+                </field>
+              </page>
+            </xpath>
      
       </field>
     </record>
