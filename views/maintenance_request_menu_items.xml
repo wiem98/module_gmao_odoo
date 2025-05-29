@@ -44,6 +44,7 @@
   <menuitem id="menu_gmao_equipment"
             name="Equipment"
             parent="menu_gmao_root"
+            action="action_gmao_equipment_list"
             sequence="20"/>
 
   <!-- Main Menu for Maintenance (Plans and Contracts) -->
@@ -86,12 +87,6 @@
   <field name="view_mode">list,kanban,form</field>
 </record>
 
-<menuitem id="menu_maintenance_teams"
-          name="Maintenance Teams"
-          parent="menu_maintenance_plan_root"
-          action="action_gmao_maintenance_teams"
-          sequence="30"/>
-
   <!-- Equipment category action -->
 <record id="action_gmao_equipment_category" model="ir.actions.act_window">
   <field name="name">equipment Category</field>
@@ -99,25 +94,31 @@
   <field name="view_mode">list,kanban,form</field>
 </record>
 
-<!-- Submenu to show the Equipment List -->
-<menuitem id="menu_gmao_equipment_list"
-          name="All Equipment"
-          parent="menu_gmao_equipment"
-          action="action_gmao_equipment_list"
-          sequence="10"/>
-
-<!-- Submenu for Equipment Categories -->
-<menuitem id="menu_maintenance_category"
-          name="Equipment Category"
-          parent="menu_gmao_equipment"
-          action="action_gmao_equipment_category"
-          sequence="20"/>
-
   <record id="action_gmao_bt" model="ir.actions.act_window">
     <field name="name">Bon de Travail</field>
     <field name="res_model">gmao.bt</field>
     <field name="view_mode">kanban,list,form</field>
   </record>
 
-  <menuitem id="menu_bt_root" name="Bon de Travail (BT)" parent="menu_gmao_root" action="action_gmao_bt" sequence="40"/>
+  <menuitem id="menu_bt_root" name="Bon de Travail (BT)" 
+            parent="menu_gmao_root" 
+            action="action_gmao_bt" 
+            sequence="40"/>
+
+  <menuitem id="menu_configuration" name="Configuration" 
+            parent="menu_gmao_root" 
+            sequence="50"/>
+
+  <!-- Submenu for Equipment Categories -->
+  <menuitem id="menu_maintenance_category"
+            name="Equipment Category"
+            parent="menu_configuration"
+            action="action_gmao_equipment_category"
+            sequence="10"/>
+
+  <menuitem id="menu_maintenance_teams"
+          name="Maintenance Teams"
+          parent="menu_configuration"
+          action="action_gmao_maintenance_teams"
+          sequence="20"/>
 </odoo>
