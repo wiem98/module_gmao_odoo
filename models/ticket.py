@@ -8,6 +8,34 @@ class MaintenanceRequest(models.Model):
 
     project_id = fields.Many2one("project.project", string="Project")
 
+    total_task_duration = fields.Float(
+        string="Total Hours Spent",
+        readonly=True,
+        help="Total hours spent on related tasks when request is done"
+    )
+
+    @api.model
+    def write(self, vals):
+        res = super(MaintenanceRequest, self).write(vals)
+        # Check if stage is being updated
+        if 'stage_id' in vals:
+            for request in self:
+                # Get the current stage after write
+                current_stage = request.stage_id
+                # Check if the current stage is considered "Done" (by name)
+                if current_stage and current_stage.name.lower() == 'done':
+                    request._compute_total_task_duration()
+        return res
+
+    def _compute_total_task_duration(self):
+        for request in self:
+            # Get all tasks related to this maintenance request
+            tasks = self.env['project.task'].search([
+                ('maintenance_request_id', '=', request.id)
+            ])
+            # Sum all task hours from the check-in/check-out system
+            request.total_task_duration = sum(task.total_hours_spent for task in tasks)
+
     criticity = fields.Selection(
         [("low", "Faible"), ("medium", "Moyenne"), ("high", "Critique")],
         string="Criticité",

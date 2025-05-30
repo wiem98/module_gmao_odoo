@@ -1,9 +1,5 @@
 <odoo>
   <data>
-
-    <!-- The action to open the predictive plan form in popup -->
-
-
     <!-- Form view inheritance -->
     <record id="view_maintenance_request_form_inherit" model="ir.ui.view">
       <field name="name">maintenance.request.form.inherit.criticity.project</field>
@@ -11,12 +7,14 @@
       <field name="inherit_id" ref="maintenance.hr_equipment_request_view_form"/>
       <field name="arch" type="xml">
   
-         <xpath expr="//header" position="inside">
-                <button name="open_or_create_plan" 
-                        type="object" 
-                        string="Create Maintenance Plan" 
-                        class="btn-primary oe_highlight"/>
-            </xpath>
+        <xpath expr="//header" position="inside">
+          <div invisible="id == False ">
+            <button name="open_or_create_plan" 
+                    type="object" 
+                    string="Create Maintenance Plan" 
+                    class="btn-primary oe_highlight"/>
+          </div>
+        </xpath>
 
         <xpath expr="//field[@name='maintenance_type']" position="replace">
           <field name="maintenance_type" widget="selection"/>
@@ -30,8 +28,30 @@
           <field name="project_id" domain="[('stage_id.name', '=', 'Done')]"/>
         </xpath>
 
+      <!-- <xpath expr="//field[@name='duration']" position="attributes">
+          <attribute name="string">Estimated Duration</attribute>
+      </xpath>
+
+      <xpath expr="//field[@name='schedule_date']" position="after">
+          <field name="total_task_duration" string="Actual Hours Spent" readonly="1"/>
+      </xpath> -->
+
+      <!-- Replace your duration-related xpaths with this: -->
+        <xpath expr="//field[@name='duration']/.." position="after">
+            <!-- <field name="total_task_duration" string="Actual Hours Spent" readonly="1"/> -->
+            <label for="total_task_duration" invisible="total_task_duration == 0"/>
+            <div invisible="total_task_duration == 0">
+              <field name="total_task_duration" widget="float_time" class="oe_inline" readonly="1"/>
+              <span> hours</span>
+              </div>
+        </xpath>
+
+        <xpath expr="//field[@name='duration']" position="attributes">
+            <attribute name="string">Estimated Duration</attribute>
+        </xpath>
+
         <xpath expr="//notebook" position="inside">
-              <page string="Maintenance Plans">
+              <page string="Maintenance Plans" invisible="id == False ">
                 <field name="maintenance_plan_ids">
                   <list editable="bottom">
                     <field name="name"/>
