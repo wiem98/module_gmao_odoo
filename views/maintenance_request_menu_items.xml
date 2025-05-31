@@ -5,22 +5,18 @@
             sequence="10"
             web_icon="gmao_maintenance,static/description/icon.png"/>
 
-  <menuitem id="menu_gmao_tickets"
-            name="Intervention Tickets"
+  <!-- Main Menu for Maintenance (Plans and Contracts) -->
+  <menuitem id="menu_maintenance_plan_root"
+            name="Maintenance"
             parent="menu_gmao_root"
             sequence="10"/>
 
-  <record id="action_gmao_maintenance_request" model="ir.actions.act_window">
-    <field name="name">All Intervention Tickets</field>
-    <field name="res_model">maintenance.request</field>
-    <field name="view_mode">list,form,kanban</field>
-    <field name="context">{}</field>
-    <field name="help" type="html">
-      <p class="o_view_nocontent_smiling_face">
-        Create a new maintenance request.
-      </p>
-    </field>
-  </record>
+
+  <menuitem id="menu_gmao_tickets"
+            name="Intervention Tickets"
+            parent="menu_gmao_root"
+            sequence="20"/> 
+
 
   <menuitem id="menu_gmao_maintenance_request"
             name="All Tickets"
@@ -34,80 +30,40 @@
           action="action_gmao_my_tasks"
           sequence="20"/>
 
-
-  <record id="action_gmao_equipment_list" model="ir.actions.act_window">
-    <field name="name">Equipment</field>
-    <field name="res_model">maintenance.equipment</field>
-    <field name="view_mode">kanban,list,form</field>
-  </record>
+<menuitem id="menu_gmao_projects"
+          name="Projects"
+          parent="menu_gmao_root"
+          action="action_gmao_project"
+          sequence="30"/>
 
   <menuitem id="menu_gmao_equipment"
             name="Equipment"
             parent="menu_gmao_root"
             action="action_gmao_equipment_list"
-            sequence="20"/>
+            sequence="40"/>
 
-  <!-- Main Menu for Maintenance (Plans and Contracts) -->
-  <menuitem id="menu_maintenance_plan_root"
-            name="Maintenance"
-            parent="menu_gmao_root"
-            sequence="30"/>
-
-<!-- Maintenance Plans -->
-<record id="action_maintenance_plan" model="ir.actions.act_window">
-    <field name="name">Maintenance Plans</field>
-    <field name="res_model">maintenance.plan</field>
-    <field name="view_mode">list,form,calendar,kanban</field>
-    <field name="view_id" ref="view_maintenance_plan_list"/>
-</record>
-
-<menuitem id="menu_maintenance_plan"
-          name="Maintenance Plans"
-          parent="menu_maintenance_plan_root"
-          action="action_maintenance_plan"
-          sequence="10"/>
-
-<!-- Maintenance Service Contracts -->
-<record id="action_maintenance_service_contract" model="ir.actions.act_window">
-    <field name="name">Maintenance Service Contracts</field>
-    <field name="res_model">maintenance.service.contract</field>
-    <field name="view_mode">list,form,calendar</field>
-</record>
 
 <menuitem id="menu_maintenance_service_contract"
           name="Maintenance Service Contracts"
           parent="menu_maintenance_plan_root"
           action="action_maintenance_service_contract"
+          sequence="10"/>
+
+<menuitem id="menu_maintenance_plan"
+          name="Maintenance Plans"
+          parent="menu_maintenance_plan_root"
+          action="action_maintenance_plan"
           sequence="20"/>
 
-  <!-- Maintenance Teams action and menu -->
-<record id="action_gmao_maintenance_teams" model="ir.actions.act_window">
-  <field name="name">Maintenance Teams</field>
-  <field name="res_model">maintenance.team</field>
-  <field name="view_mode">list,kanban,form</field>
-</record>
-
-  <!-- Equipment category action -->
-<record id="action_gmao_equipment_category" model="ir.actions.act_window">
-  <field name="name">equipment Category</field>
-  <field name="res_model">maintenance.equipment.category</field>
-  <field name="view_mode">list,kanban,form</field>
-</record>
-
-  <record id="action_gmao_bt" model="ir.actions.act_window">
-    <field name="name">Bon de Travail</field>
-    <field name="res_model">gmao.bt</field>
-    <field name="view_mode">kanban,list,form</field>
-  </record>
-
-  <menuitem id="menu_bt_root" name="Bon de Travail (BT)" 
+  <menuitem id="menu_bt_root" 
+            name="Bon de Travail (BT)" 
             parent="menu_gmao_root" 
             action="action_gmao_bt" 
-            sequence="40"/>
+            sequence="50"/>
 
   <menuitem id="menu_configuration" name="Configuration" 
             parent="menu_gmao_root" 
-            sequence="50"/>
+            sequence="60"/>
 
   <!-- Submenu for Equipment Categories -->
   <menuitem id="menu_maintenance_category"

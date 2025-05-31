@@ -16,6 +16,8 @@ class MaintenanceServiceContract(models.Model):
     _description = "Maintenance Service Contract"
     _inherit = ["mail.thread", "mail.activity.mixin"]
 
+    project_id = fields.Many2one("project.project", string="Project")
+
     name = fields.Char(string="Contract Name", required=True)
     contract_start_date = fields.Date(string="Contract Start Date")
     contract_end_date = fields.Date(string="Contract End Date")
@@ -65,6 +67,22 @@ class MaintenanceServiceContract(models.Model):
         readonly=True,
     )
 
+    def _get_project_stage_by_name(self, stage_name):
+        return self.env['project.project.stage'].search([('name', '=', stage_name)], limit=1)
+    
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        contracts = super().create(vals_list)
+
+        for contract in contracts:
+            if contract.project_id and contract.state == "draft":
+                todo_stage = contract._get_project_stage_by_name("To Do")
+                if todo_stage:
+                    contract.project_id.write({'stage_id': todo_stage.id})
+
+        return contracts
+
     def action_approve_contract(self):
         for contract in self:
             if not contract.client_signature or not contract.company_signature:
@@ -73,6 +91,13 @@ class MaintenanceServiceContract(models.Model):
                 )
             contract.state = "approved"
             contract.message_post(body="Contract approved successfully.")
+
+            if contract.project_id:
+                todo_stage = contract._get_project_stage_by_name("To Do")
+                in_progress_stage = contract._get_project_stage_by_name("In Progress")
+
+                if contract.project_id.stage_id == todo_stage and in_progress_stage:
+                    contract.project_id.write({'stage_id': in_progress_stage.id})
 
     def action_activate_contract(self):
         for contract in self:

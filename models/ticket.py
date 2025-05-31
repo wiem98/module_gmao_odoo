@@ -68,15 +68,44 @@ class MaintenanceRequest(models.Model):
         string="Request Cost", compute="_compute_request_cost", store=True
     )
 
+
     def _get_or_create_stage(self, name, project):
-        """Get or create a task stage and link it to the given project"""
         Stage = self.env["project.task.type"]
+
+        # Desired order mapping
+        order_map = {
+            "Today": 1,
+            "This Week": 2,
+            "This Month": 3,
+            "Later": 4,
+            "Overdue": 0,  # optional if you still want Overdue shown first
+        }
+
         stage = Stage.search([("name", "=", name)], limit=1)
+
         if not stage:
-            stage = Stage.create({"name": name})
+            stage = Stage.create({
+                "name": name,
+                "sequence": order_map.get(name, 99),  # fallback to 99 if name not mapped
+            })
+        else:
+            # Ensure stage sequence is correct
+            expected_sequence = order_map.get(name)
+            if expected_sequence is not None and stage.sequence != expected_sequence:
+                stage.sequence = expected_sequence
+
+        # Link to project if not already
         if project and project.id not in stage.project_ids.ids:
             stage.project_ids = [(4, project.id)]
+
         return stage
+
+
+    
+    def _ensure_all_stages_exist_for_project(self, project):
+        stage_names = ["Today", "This Week", "This Month", "Later"]
+        for name in stage_names:
+            self._get_or_create_stage(name, project)
 
     def _get_stage_based_on_deadline(self, deadline, project):
         today = fields.Date.context_today(self)
@@ -151,17 +180,14 @@ class MaintenanceRequest(models.Model):
             # Update project stage and create task
             if request.project_id:
                 try:
-                    ProjectStage = self.env.get("project.stage")
-                    if ProjectStage:
-                        intervention_proj_stage = ProjectStage.search(
-                            [("name", "ilike", "Intervention")], limit=1
-                        )
-                        if intervention_proj_stage:
-                            request.project_id.stage_id = intervention_proj_stage.id
-
                     deadline = request.schedule_date
                     project = request.project_id
 
+                    # Ensure all required stages are created and linked to the project
+                    request._ensure_all_stages_exist_for_project(request.project_id)
+
+
+                    # Determine the appropriate stage based on the deadline
                     task_stage = request._get_stage_based_on_deadline(deadline, project)
 
                     self.env["project.task"].create(
@@ -182,6 +208,7 @@ class MaintenanceRequest(models.Model):
 
                 except Exception as e:
                     request.message_post(body=f"⚠️ Project integration failed: {str(e)}")
+
 
             # Créer automatiquement un bon de travail
             bt_model = self.env["gmao.bt"]

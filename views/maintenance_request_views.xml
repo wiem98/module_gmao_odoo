@@ -25,7 +25,7 @@
         </xpath>
 
         <xpath expr="//field[@name='equipment_id']" position="after">
-          <field name="project_id" domain="[('stage_id.name', '=', 'Done')]"/>
+          <field name="project_id" domain="[('stage_id.name', '!=', 'To Do'), ('stage_id.name', '!=', 'Cancelled')]"/>
         </xpath>
 
       <!-- <xpath expr="//field[@name='duration']" position="attributes">

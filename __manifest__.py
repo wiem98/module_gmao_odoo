@@ -8,6 +8,7 @@
     'summary': 'GMAO intervention tickets with criticity and automatic assignment',
     'data': [
         'data/bt_stage_data.xml', 
+        'data/project_task_stage.xml',
         'data/bt_cron.xml',
         'data/contrat_cron.xml',
         'data/report_maintenance_contract_template.xml',
@@ -20,7 +21,8 @@
         'views/equipment_views.xml',
         'views/maintenance_plan_views.xml',
         'views/maintenance_service_contract.xml',
-        'views/project_task_view.xml',
+        'views/project_view.xml',
+        'views/gmao_menu_actions.xml',
         'views/maintenance_request_menu_items.xml',
 
     ],

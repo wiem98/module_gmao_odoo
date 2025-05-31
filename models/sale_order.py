@@ -69,91 +69,6 @@ class SaleOrder(models.Model):
                 self.env['project.task'].create(task_values)
 
         return res
-    
-class ProjectTask(models.Model):
-    _inherit = 'project.task'
-
-    checkin_state = fields.Selection([
-        ('out', 'Checked Out'),
-        ('in', 'Checked In'),
-    ], default='out')
-    checkin_time = fields.Datetime(string="Check-In Time")
-    total_hours_spent = fields.Float(string="Total Hours Spent")
-    maintenance_request_id = fields.Many2one('maintenance.request', string="Maintenance Request")
-    
-    def write(self, vals):
-        res = super().write(vals)
-        if 'stage_id' in vals:
-            projects = self.mapped('project_id')
-            projects.check_and_notify_ready_for_invoice()
-        return res
-    def action_toggle_checkin(self):
-        for task in self:
-            if task.checkin_state == 'out':
-                # Do Check-In
-                task.checkin_state = 'in'
-                task.checkin_time = fields.Datetime.now()
-            elif task.checkin_state == 'in':
-                # Do Check-Out
-                if task.checkin_time:
-                    delta = fields.Datetime.now() - task.checkin_time
-                    task.total_hours_spent += delta.total_seconds() / 3600
-                task.checkin_state = 'out'
-                task.checkin_time = False
-
-
-class Project(models.Model):
-    _inherit = 'project.project'
-
-    total_time_spent = fields.Float(string="Total Time Spent (hrs)", compute="_compute_total_time_spent", store=True)
-    opened_user_ids = fields.Many2many('res.users', string="Users Who Opened")
-    is_new_project = fields.Boolean(string="Is New Project", compute="_compute_is_new_project", store=False)
-    current_user_id = fields.Integer(string="Current User ID", compute="_compute_current_user_id")
-    
-    def check_and_notify_ready_for_invoice(self):
-        done_stage = self.env['project.task.type'].search([('name', '=', 'Done')], limit=1)
-        if not done_stage:
-            return
-
-        for project in self:
-            all_done = all(task.stage_id == done_stage for task in project.task_ids)
-            if all_done and not project.message_main_attachment_id:  # Avoid spamming
-                # Send notification
-                template = self.env.ref('sale_project_auto.email_template_project_ready_invoice', raise_if_not_found=False)
-                if template:
-                    template.send_mail(project.id, force_send=True)
-                else:
-                    project.message_post(body=_("🧾 All tasks are marked Done. Project is ready to be invoiced."))
-
-    def _compute_current_user_id(self):
-        uid = self.env.user.id
-        for record in self:
-            record.current_user_id = uid
-
-    @api.depends('create_date')
-    def _compute_is_new_project(self):
-        today = fields.Date.context_today(self)
-        for project in self:
-            if project.create_date:
-                delta = today - project.create_date.date()
-                project.is_new_project = delta.days <= 7
-            else:
-                project.is_new_project = False
-
-    @api.depends('task_ids.total_hours_spent')
-    def _compute_total_time_spent(self):
-        for project in self:
-            project.total_time_spent = sum(project.task_ids.mapped('total_hours_spent'))
-
-    def mark_as_opened(self):
-        for project in self:
-            if self.env.user not in project.opened_user_ids:
-                project.opened_user_ids = [(4, self.env.user.id)]
-
-    def read(self, fields=None, load='_classic_read'):
-        projects = super().read(fields=fields, load=load)
-        self.mark_as_opened()
-        return projects
 
 class AccountMove(models.Model):
     _inherit = 'account.move'
@@ -207,3 +122,117 @@ class AccountMove(models.Model):
         })
 
         return True
+    
+class Project(models.Model):
+    _inherit = 'project.project'
+
+    total_time_spent = fields.Float(string="Total Time Spent (hrs)", compute="_compute_total_time_spent", store=True)
+    opened_user_ids = fields.Many2many('res.users', string="Users Who Opened")
+    is_new_project = fields.Boolean(string="Is New Project", compute="_compute_is_new_project", store=False)
+    current_user_id = fields.Integer(string="Current User ID", compute="_compute_current_user_id")
+    stage_id = fields.Many2one('project.project.stage', string='Stage')
+    partner_id = fields.Many2one(
+        'res.partner',
+        string='Customer',
+        required=True,
+        domain=[('customer_rank', '>', 0)]
+    )
+
+
+    @api.model
+    def _update_project_stage_based_on_tasks(self):
+        stage_done = self.env['project.task.type'].search([('name', '=', 'Done')], limit=1)
+        stage_project_done = self.env['project.project.stage'].search([('name', '=', 'Completed')], limit=1)
+        for project in self:
+            if all(task.stage_id == stage_done for task in project.task_ids):
+                project.stage_id = stage_project_done.id
+
+    def check_and_notify_ready_for_invoice(self):
+        done_stage = self.env['project.task.type'].search([('name', '=', 'Done')], limit=1)
+        if not done_stage:
+            return
+
+        for project in self:
+            all_done = all(task.stage_id == done_stage for task in project.task_ids)
+            if all_done and not project.message_main_attachment_id:  # Avoid spamming
+                # Send notification
+                template = self.env.ref('sale_project_auto.email_template_project_ready_invoice', raise_if_not_found=False)
+                if template:
+                    template.send_mail(project.id, force_send=True)
+                else:
+                    project.message_post(body=_("🧾 All tasks are marked Done. Project is ready to be invoiced."))
+
+    def _compute_current_user_id(self):
+        uid = self.env.user.id
+        for record in self:
+            record.current_user_id = uid
+
+    @api.depends('create_date')
+    def _compute_is_new_project(self):
+        today = fields.Date.context_today(self)
+        for project in self:
+            if project.create_date:
+                delta = today - project.create_date.date()
+                project.is_new_project = delta.days <= 7
+            else:
+                project.is_new_project = False
+
+    @api.depends('task_ids.total_hours_spent')
+    def _compute_total_time_spent(self):
+        for project in self:
+            project.total_time_spent = sum(project.task_ids.mapped('total_hours_spent'))
+
+    def mark_as_opened(self):
+        for project in self:
+            if self.env.user not in project.opened_user_ids:
+                project.opened_user_ids = [(4, self.env.user.id)]
+
+    def read(self, fields=None, load='_classic_read'):
+        projects = super().read(fields=fields, load=load)
+        self.mark_as_opened()
+        return projects
+
+class ProjectTaskType(models.Model):
+    _inherit = 'project.task.type'
+
+    company_id = fields.Many2one('res.company', string="Company", default=lambda self: self.env.company)
+
+class ProjectStage(models.Model):
+    _inherit = 'project.project.stage'
+    _order = 'sequence'
+
+    name = fields.Char(required=True)
+    sequence = fields.Integer(default=1)
+    company_id = fields.Many2one('res.company', string="Company", default=lambda self: self.env.company)
+
+
+class ProjectTask(models.Model):
+    _inherit = 'project.task'
+
+    checkin_state = fields.Selection([
+        ('out', 'Checked Out'),
+        ('in', 'Checked In'),
+    ], default='out')
+    checkin_time = fields.Datetime(string="Check-In Time")
+    total_hours_spent = fields.Float(string="Total Hours Spent")
+    maintenance_request_id = fields.Many2one('maintenance.request', string="Maintenance Request")
+    
+    def write(self, vals):
+        res = super().write(vals)
+        if 'stage_id' in vals:
+            projects = self.mapped('project_id')
+            projects.check_and_notify_ready_for_invoice()
+        return res
+    def action_toggle_checkin(self):
+        for task in self:
+            if task.checkin_state == 'out':
+                # Do Check-In
+                task.checkin_state = 'in'
+                task.checkin_time = fields.Datetime.now()
+            elif task.checkin_state == 'in':
+                # Do Check-Out
+                if task.checkin_time:
+                    delta = fields.Datetime.now() - task.checkin_time
+                    task.total_hours_spent += delta.total_seconds() / 3600
+                task.checkin_state = 'out'
+                task.checkin_time = False
