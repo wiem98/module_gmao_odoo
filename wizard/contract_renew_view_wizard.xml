@@ -1,0 +1,41 @@
+<odoo>
+    <record id="view_contract_renew_wizard_form" model="ir.ui.view">
+        <field name="name">contract.renew.wizard.form</field>
+        <field name="model">maintenance.contract.renew.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Renew Contract">
+                <sheet>
+                    <group col="12">
+                        <group colspan="6">
+                            <field name="name"/>
+                        </group>
+                        <group colspan="6">
+                            <field name="associated_equipments" widget="many2many_tags"/>
+                        </group>
+                    </group>
+                    <group col="12">
+                        <group colspan="6">
+                            <field name="contract_start_date"/>
+                        </group>
+                        <group colspan="6">
+                            <field name="contract_end_date"/>
+                        </group>
+                    </group>
+                    <group col="12">
+                        <group colspan="6">
+                            <field name="cost"/>
+                        </group>
+                        <group colspan="6">
+                            <field name="sla_duration"/>
+                        </group>
+                    </group>
+                    
+                    <footer>
+                        <button name="action_confirm_renewal" type="object" string="Confirm" class="btn-primary"/>
+                        <button string="Cancel" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </sheet>
+            </form>
+        </field>
+    </record>
+</odoo>

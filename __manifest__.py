@@ -23,6 +23,7 @@
         'views/maintenance_service_contract.xml',
         'views/project_view.xml',
         'views/gmao_menu_actions.xml',
+        'wizard/contract_renew_view_wizard.xml',
         'views/maintenance_request_menu_items.xml',
 
     ],

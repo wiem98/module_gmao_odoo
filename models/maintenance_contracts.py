@@ -19,8 +19,8 @@ class MaintenanceServiceContract(models.Model):
     project_id = fields.Many2one("project.project", string="Project")
 
     name = fields.Char(string="Contract Name", required=True)
-    contract_start_date = fields.Date(string="Contract Start Date")
-    contract_end_date = fields.Date(string="Contract End Date")
+    contract_start_date = fields.Date(string="Contract Start Date", required=True)
+    contract_end_date = fields.Date(string="Contract End Date", required=True)
     renewal_alert_days = fields.Integer(string="Renewal Alert Days", default=30)
 
     associated_equipments = fields.Many2many(
@@ -67,9 +67,31 @@ class MaintenanceServiceContract(models.Model):
         readonly=True,
     )
 
+    renewed_from_contract_id = fields.Many2one(
+        'maintenance.service.contract',
+        string='Renewed From Contract',
+        help="The original contract this one was renewed from."
+    )
+
+    renewal_ids = fields.One2many(
+        'maintenance.service.contract',
+        'renewed_from_contract_id',
+        string='Renewals'
+    )
+
+    show_renewals_button = fields.Boolean(
+        compute='_compute_show_renewals_button'
+    )
+
+    @api.depends('renewed_from_contract_id', 'renewal_ids')
+    def _compute_show_renewals_button(self):
+        for rec in self:
+            rec.show_renewals_button = not rec.renewed_from_contract_id and bool(rec.renewal_ids)
+            
     def _get_project_stage_by_name(self, stage_name):
-        return self.env['project.project.stage'].search([('name', '=', stage_name)], limit=1)
-    
+        return self.env["project.project.stage"].search(
+            [("name", "=", stage_name)], limit=1
+        )
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -79,7 +101,7 @@ class MaintenanceServiceContract(models.Model):
             if contract.project_id and contract.state == "draft":
                 todo_stage = contract._get_project_stage_by_name("To Do")
                 if todo_stage:
-                    contract.project_id.write({'stage_id': todo_stage.id})
+                    contract.project_id.write({"stage_id": todo_stage.id})
 
         return contracts
 
@@ -97,7 +119,7 @@ class MaintenanceServiceContract(models.Model):
                 in_progress_stage = contract._get_project_stage_by_name("In Progress")
 
                 if contract.project_id.stage_id == todo_stage and in_progress_stage:
-                    contract.project_id.write({'stage_id': in_progress_stage.id})
+                    contract.project_id.write({"stage_id": in_progress_stage.id})
 
     def action_activate_contract(self):
         for contract in self:
@@ -128,7 +150,6 @@ class MaintenanceServiceContract(models.Model):
             contract.state = "cancelled"
             contract.message_post(body="Contrat annulé.")
 
-
     @api.depends("sla_duration", "contract_end_date")
     def _compute_sla_breached(self):
         for contract in self:
@@ -144,21 +165,24 @@ class MaintenanceServiceContract(models.Model):
     def check_contract_renewal(self):
         contracts = self.search([("contract_end_date", "!=", False)])
         for contract in contracts:
-            if contract.contract_end_date - date.today() <= timedelta(
-                days=contract.renewal_alert_days
-            ):
-                contract.message_post(
-                    body=f"Contract '{contract.name}' is nearing its end date ({contract.contract_end_date}). Please consider renewing."
-                )
+            if contract.state == "approved":
+                if contract.contract_end_date - date.today() <= timedelta(
+                    days=contract.renewal_alert_days
+                ):
+                    contract.message_post(
+                        body=f"Contract '{contract.name}' is nearing its end date ({contract.contract_end_date}). Please consider renewing."
+                    )
 
     @api.model
     def update_expired_contracts(self):
         today = date.today()
-        expired_contracts = self.search([
-            ("contract_end_date", "<", today),
-            ("state", "=", "active"),
-            ("contract_end_date", "!=", False),
-        ])
+        expired_contracts = self.search(
+            [
+                ("contract_end_date", "<", today),
+                ("state", "=", "approved"),
+                ("contract_end_date", "!=", False),
+            ]
+        )
         for contract in expired_contracts:
             contract.state = "expired"
             contract.message_post(
@@ -171,12 +195,26 @@ class MaintenanceServiceContract(models.Model):
             "module_gmao_odoo.report_maintenance_contract_pdf"
         ).report_action(self.id)
 
-    
-
     def _get_report_base_filename(self):
         self.ensure_one()
         return f"Contract_{self.name.replace(' ', '_')}"
-    
+
     def action_send_email(self):
         self.ensure_one()
-        
+
+    def action_open_renew_wizard(self):
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "name": "Renew Contract",
+            "res_model": "maintenance.contract.renew.wizard",
+            "view_mode": "form",
+            "target": "new",
+            "context": {
+                "default_contract_id": self.id,
+                "default_name": f"Renew from {self.name}",
+                "default_cost": self.cost,
+                "default_sla_duration": self.sla_duration,
+            },
+        }
+

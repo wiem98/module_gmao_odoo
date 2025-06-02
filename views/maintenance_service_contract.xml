@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+  <record id="action_maintenance_contract_renewals" model="ir.actions.act_window">
+      <field name="name">Contract Renewals</field>
+      <field name="res_model">maintenance.service.contract</field>
+      <field name="view_mode">list,form</field>
+      <field name="domain">[('renewed_from_contract_id', '=', active_id)]</field>
+      <field name="context">{}</field>
+      <field name="target">current</field>
+  </record>
+
   <record id="view_maintenance_service_contract_list" model="ir.ui.view">
     <field name="name">maintenance.service.contract.list</field>
     <field name="model">maintenance.service.contract</field>
@@ -29,6 +38,18 @@
     <field name="arch" type="xml">
       <form string="Maintenance Service Contract">
         <header>
+            <button name="%(action_maintenance_contract_renewals)d"
+                    type="action"
+                    string="Renewals"
+                    icon="fa-refresh"
+                    invisible="show_renewals_button == False"/>
+
+            <button 
+                    name="action_open_renew_wizard"
+                    type="object"
+                    string="Renew Contract"
+                    class="btn-primary"
+                    invisible="state != 'expired'"/>
             <button 
                     name="action_approve_contract"
                     type="object"
