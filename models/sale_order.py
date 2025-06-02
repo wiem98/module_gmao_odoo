@@ -229,6 +229,9 @@ class ProjectTask(models.Model):
                 # Do Check-In
                 task.checkin_state = 'in'
                 task.checkin_time = fields.Datetime.now()
+                
+                if not task.state == '03_approved':
+                    task.state = '03_approved'
             elif task.checkin_state == 'in':
                 # Do Check-Out
                 if task.checkin_time:
