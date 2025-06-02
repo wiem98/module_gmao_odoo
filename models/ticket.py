@@ -190,7 +190,7 @@ class MaintenanceRequest(models.Model):
                     # Determine the appropriate stage based on the deadline
                     task_stage = request._get_stage_based_on_deadline(deadline, project)
 
-                    self.env["project.task"].create(
+                    task = self.env["project.task"].create(
                         {
                             "name": request.name,
                             "project_id": project.id,
@@ -205,6 +205,18 @@ class MaintenanceRequest(models.Model):
                             "date_deadline": request.schedule_date,
                         }
                     )
+
+                    # Create an activity on the created task
+                    if task and request.schedule_date:
+                        self.env["mail.activity"].create({
+                            "res_model_id": self.env["ir.model"]._get_id("project.task"),
+                            "res_id": task.id,
+                            "activity_type_id": self.env.ref("mail.mail_activity_data_todo").id,
+                            "summary": request.description or f"Task for maintenance: {request.name}",
+                            "user_id": request.user_id.id if request.user_id else self.env.uid,
+                            "date_deadline": request.schedule_date,
+                        })
+
 
                 except Exception as e:
                     request.message_post(body=f"⚠️ Project integration failed: {str(e)}")
