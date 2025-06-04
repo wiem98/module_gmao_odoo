@@ -51,11 +51,14 @@
 
                     <!-- Button Line -->
                     <div class="mt-2">
+                        <t t-set="is_done" t-value="record.state.raw_value == '1_done'"/>
+                        <t t-set="is_checked_in" t-value="record.checkin_state.raw_value == 'in'"/>
                         <button 
                             type="object"
                             name="action_toggle_checkin"
                             t-attf-class="btn btn-xs fw-bold #{record.checkin_state.raw_value == 'out' ? 'btn-success' : 'btn-danger'}"
                             style="font-size: 11px; padding: 2px 8px;"
+                            t-att-disabled="is_done"
                         >
                             <t t-if="record.checkin_state.raw_value == 'out'">Check In</t>
                             <t t-else="">Check Out</t>

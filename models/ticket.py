@@ -25,6 +25,19 @@ class MaintenanceRequest(models.Model):
                 # Check if the current stage is considered "Done" (by name)
                 if current_stage and current_stage.name.lower() == 'done':
                     request._compute_total_task_duration()
+                    task = self.env['project.task'].search([
+                        ('maintenance_request_id', '=', request.id)
+                    ])
+                    if task.stage_id.id:
+                        task.state = "1_done"
+                        # Step 2: Mark activities on task as done
+                        task_activities = self.env['mail.activity'].search([
+                            ('res_model', '=', 'project.task'),
+                            ('res_id', '=', task.id),
+                        ])
+                        for activity in task_activities:
+                            activity.action_feedback(feedback="Auto-closed with maintenance request.")
+
         return res
 
     def _compute_total_task_duration(self):
@@ -216,7 +229,6 @@ class MaintenanceRequest(models.Model):
                             "user_id": request.user_id.id if request.user_id else self.env.uid,
                             "date_deadline": request.schedule_date,
                         })
-
 
                 except Exception as e:
                     request.message_post(body=f"⚠️ Project integration failed: {str(e)}")

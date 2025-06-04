@@ -218,11 +218,42 @@ class ProjectTask(models.Model):
     maintenance_request_id = fields.Many2one('maintenance.request', string="Maintenance Request")
     
     def write(self, vals):
-        res = super().write(vals)
+        # Automatically check out if moving to "done" stage
+        if 'state' in vals and vals['state'] == '1_done':
+            for task in self:
+                if task.checkin_state == 'in':
+                    if task.checkin_time:
+                        delta = fields.Datetime.now() - task.checkin_time
+                        task.total_hours_spent += delta.total_seconds() / 3600
+                    task.checkin_state = 'out'
+                    task.checkin_time = False
+
+                # 1. Auto-close linked maintenance request
+                if task.maintenance_request_id:
+
+                    # Search for a stage named "Done"
+                    done_stage = self.env['maintenance.stage'].search([('name', 'ilike', 'done')], limit=1)
+                    if task.maintenance_request_id.stage_id != done_stage:
+                        task.maintenance_request_id.write({'stage_id': done_stage.id})
+                        #print(task.maintenance_request_id.stage_id)
+
+                # 2. Mark related activities as done
+                activities = self.env['mail.activity'].search([
+                    ('res_model', '=', 'project.task'),
+                    ('res_id', '=', task.id),
+                    ('activity_type_id', '!=', False),  # Only real activities
+                    ('date_deadline', '!=', False),     # Optional filter
+                ])
+                for activity in activities:
+                    activity.action_feedback(feedback="Marked as done with task.")
+
+        # If stage_id is changed, check if project is ready for invoice
         if 'stage_id' in vals:
             projects = self.mapped('project_id')
             projects.check_and_notify_ready_for_invoice()
-        return res
+        return super().write(vals)
+
+
     def action_toggle_checkin(self):
         for task in self:
             if task.checkin_state == 'out':
