@@ -88,6 +88,8 @@ class MaintenanceRequest(models.Model):
         string="Request Cost", compute="_compute_request_cost", store=True
     )
 
+    def _get_project_stage_in_progress(self):
+        return self.env['project.project.stage'].search([('name', 'ilike', 'in progress')], limit=1)
 
     def _get_or_create_stage(self, name, project):
         Stage = self.env["project.task.type"]
@@ -192,15 +194,17 @@ class MaintenanceRequest(models.Model):
         for request in requests:
             request._auto_assign()
 
-            # Unified plan creation for all maintenance types
-            """ if request.equipment_id and request.maintenance_type:
-                request._create_or_update_plan() """
-
             # Update project stage and create task
             if request.project_id:
                 try:
                     deadline = request.schedule_date
                     project = request.project_id
+
+                    # Auto-move project to "In Progress" stage if just created
+                    if project.create_date and (fields.Datetime.now() - project.create_date) < timedelta(seconds=30):
+                        in_progress_stage = self.env['project.project.stage'].search([('name', '=', 'In Progress')], limit=1)
+                        if in_progress_stage:
+                            project.stage_id = in_progress_stage.id
 
                     # Ensure all required stages are created and linked to the project
                     request._ensure_all_stages_exist_for_project(request.project_id)
