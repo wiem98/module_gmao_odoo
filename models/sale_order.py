@@ -235,7 +235,14 @@ class ProjectTask(models.Model):
                     done_stage = self.env['maintenance.stage'].search([('name', 'ilike', 'done')], limit=1)
                     if task.maintenance_request_id.stage_id != done_stage:
                         task.maintenance_request_id.write({'stage_id': done_stage.id})
-                        #print(task.maintenance_request_id.stage_id)
+                        # Mark activities on maintenance request as done
+                        mr_activities = self.env['mail.activity'].search([
+                            ('res_model', '=', 'maintenance.request'),
+                            ('res_id', '=', task.maintenance_request_id.id),
+                        ])
+                        for activity in mr_activities:
+                            activity.action_feedback(feedback="Auto-closed with stage set to Done.")
+
 
                 # 2. Mark related activities as done
                 activities = self.env['mail.activity'].search([

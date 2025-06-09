@@ -14,7 +14,6 @@ class MaintenanceRequest(models.Model):
         help="Total hours spent on related tasks when request is done"
     )
 
-    @api.model
     def write(self, vals):
         res = super(MaintenanceRequest, self).write(vals)
         # Check if stage is being updated
@@ -37,6 +36,14 @@ class MaintenanceRequest(models.Model):
                         ])
                         for activity in task_activities:
                             activity.action_feedback(feedback="Auto-closed with maintenance request.")
+                            
+                    # Step 3: Mark activities on maintenance request as done
+                    mr_activities = self.env['mail.activity'].search([
+                        ('res_model', '=', 'maintenance.request'),
+                        ('res_id', '=', request.id),
+                    ])
+                    for activity in mr_activities:
+                        activity.action_feedback(feedback="Auto-closed with stage set to Done.")
 
         return res
 
@@ -91,7 +98,6 @@ class MaintenanceRequest(models.Model):
             "This Week": 2,
             "This Month": 3,
             "Later": 4,
-            "Overdue": 0,  # optional if you still want Overdue shown first
         }
 
         stage = Stage.search([("name", "=", name)], limit=1)
@@ -108,8 +114,8 @@ class MaintenanceRequest(models.Model):
                 stage.sequence = expected_sequence
 
         # Link to project if not already
-        if project and project.id not in stage.project_ids.ids:
-            stage.project_ids = [(4, project.id)]
+        """ if project and project.id not in stage.project_ids.ids:
+            stage.project_ids = [(4, project.id)] """
 
         return stage
 
@@ -247,7 +253,6 @@ class MaintenanceRequest(models.Model):
                     else False
                 ),
                 "supervisor_id": request.user_id.id,
-                "intervention_type": request.maintenance_type,
                 "description": request.description
                 or f"BT généré automatiquement depuis la demande {request.name}",
                 "schedule_date": fields.Date.today(),
