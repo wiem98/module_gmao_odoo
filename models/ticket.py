@@ -187,8 +187,8 @@ class MaintenanceRequest(models.Model):
             request._auto_assign()
 
             # Unified plan creation for all maintenance types
-            if request.equipment_id and request.maintenance_type:
-                request._create_or_update_plan()
+            """ if request.equipment_id and request.maintenance_type:
+                request._create_or_update_plan() """
 
             # Update project stage and create task
             if request.project_id:
