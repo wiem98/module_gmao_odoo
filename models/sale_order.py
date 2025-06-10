@@ -177,10 +177,12 @@ class Project(models.Model):
             else:
                 project.is_new_project = False
 
-    @api.depends('task_ids.total_hours_spent')
+    @api.depends('task_ids', 'task_ids.total_hours_spent')
     def _compute_total_time_spent(self):
         for project in self:
-            project.total_time_spent = sum(project.task_ids.mapped('total_hours_spent'))
+            all_tasks = self.env['project.task'].search([('project_id', '=', project.id)])
+            project.total_time_spent = sum(all_tasks.mapped('total_hours_spent'))
+
 
     def mark_as_opened(self):
         for project in self:
