@@ -165,7 +165,7 @@ class MaintenanceServiceContract(models.Model):
     def check_contract_renewal(self):
         contracts = self.search([("contract_end_date", "!=", False)])
         for contract in contracts:
-            if contract.state == "approved":
+            if contract.state == "approved" or contract.state == "active":
                 if contract.contract_end_date - date.today() <= timedelta(
                     days=contract.renewal_alert_days
                 ):
@@ -176,18 +176,17 @@ class MaintenanceServiceContract(models.Model):
     @api.model
     def update_expired_contracts(self):
         today = date.today()
-        expired_contracts = self.search(
-            [
-                ("contract_end_date", "<", today),
-                ("state", "=", "approved"),
-                ("contract_end_date", "!=", False),
-            ]
-        )
+        expired_contracts = self.search([
+            ("contract_end_date", "<", today),
+            ("state", "in", ["approved", "active"]),
+            ("contract_end_date", "!=", False),
+        ])
         for contract in expired_contracts:
             contract.state = "expired"
             contract.message_post(
                 body=f"Le contrat '{contract.name}' est arrivé à expiration ({contract.contract_end_date}) et a été automatiquement mis à jour en 'expiré'."
             )
+
 
     def action_print_contract(self):
         self.ensure_one()
